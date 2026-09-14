@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIMAKER - Sistem Manajemen Kinerja</title>
+    <style>
+        /* ============================================================
+           RESET & GLOBAL
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f1f5f9;
+            padding: 20px;
+            color: #0f172a;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2a5f8f);
+            color: #fff;
+            padding: 20px 28px;
+            border-radius: 14px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .header > div {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header img {
+            height: 50px;
+            width: auto;
+            flex-shrink: 0;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header h1 small {
+            font-weight: 300;
+            font-size: 14px;
+            opacity: 0.85;
+            margin-left: 10px;
+        }
+
+        /* ============================================================
+           TOGGLE MODUL
+           ============================================================ */
+        .toggle-modul {
+            display: flex;
+            gap: 0;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            border: 1px solid #cbd5e1;
+        }
+        .toggle-modul button {
+            padding: 12px 32px;
+            border: none;
+            background: transparent;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: #475569;
+            flex: 1;
+        }
+        .toggle-modul button:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .toggle-modul button.active {
+            background: #1e3a5f;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(30, 58, 95, 0.3);
+        }
+
+        /* ============================================================
+           CARD
+           ============================================================ */
+        .card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+            border: 1px solid #e9edf2;
+        }
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title .badge {
+            font-size: 12px;
+            background: #e2e8f0;
+            padding: 2px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        /* ============================================================
+           FORM
+           ============================================================ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: end;
+        }
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .form-group input,
+        .form-group select {
+            padding: 10px 14px;
+            border: 1.5px solid #d1d9e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.2s;
+            background: #fafbfc;
+            width: 100%;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2a5f8f;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(42, 95, 143, 0.10);
+        }
+        .form-group input:disabled {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .form-group .info-target {
+            font-size: 13px;
+            color: #64748b;
+            background: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px dashed #d1d9e6;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        /* ============================================================
+           BUTTONS
+           ============================================================ */
+        .btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-success {
+            background: #10b981;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #d1d9e6;
+            color: #475569;
+        }
+        .btn-outline:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        thead {
+            background: #f1f5f9;
+        }
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            font-weight: 700;
+            color: #1e293b;
+            border-bottom: 2px solid #d1d9e6;
+            white-space: nowrap;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9edf2;
+            vertical-align: middle;
+        }
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        .empty-state .icon {
+            font-size: 44px;
+            margin-bottom: 10px;
+        }
+        .empty-state h3 {
+            color: #475569;
+            margin-bottom: 4px;
+        }
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.35s ease;
+            z-index: 999;
+            max-width: 380px;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.success {
+            background: #065f46;
+        }
+        .toast.error {
+            background: #991b1b;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 640px) {
+            .header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 16px;
+            }
+            .header > div {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .header img {
+                height: 40px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .header h1 small {
+                font-size: 12px;
+                display: block;
+                margin-left: 0;
+            }
+            .toggle-modul button {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-grid .full-width {
+                grid-column: 1;
+            }
+            th,
+            td {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            .card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ==========================================================
+        HEADER
+        ========================================================== -->
+        <div class="header">
+            <div>
+                <img src="bna.jpg" alt="Logo" />
+                <h1>
+                    SIMAKER
+                    <small>Sistem Manajemen Kinerja Disnaker Banjarnegara</small>
+                </h1>
+            </div>
+        </div>
+
+        <!-- ==========================================================
+        TOGGLE MODUL
+        ========================================================== -->
+        <div class="toggle-modul">
+            <button class="active" data-modul="capaian" id="btnCapaian">Capaian Kerja</button>
+            <button data-modul="anggaran" id="btnAnggaran">Realisasi Anggaran</button>
+        </div>
+
+        <!-- ==========================================================
+        MODUL CAPAIAN KERJA
+        ========================================================== -->
+        <div id="modulCapaian">
+            <div class="card">
+                <div class="card-title">
+                    Input Data Capaian Kerja
+                    <span class="badge">Pilih indikator kinerja di bawah</span>
+                </div>
+                <form id="formCapaian" onsubmit="submitCapaian(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="capaianPeriode">Periode Triwulan</label>
+                            <select id="capaianPeriode" required>
+                                <option value="">-- Pilih Triwulan --</option>
+                                <option value="Triwulan I">Triwulan I</option>
+                                <option value="Triwulan II">Triwulan II</option>
+                                <option value="Triwulan III">Triwulan III</option>
+                                <option value="Triwulan IV">Triwulan IV</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="capaianTahun">Tahun</label>
+                            <select id="capaianTahun" required>
+                                <option value="">-- Pilih Tahun --</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="capaianIndikator">Pilih Indikator Kinerja</label>
+                            <select id="capaianIndikator" required onchange="tampilkanDetailCapaian()">
+                                <option value="">-- Pilih Indikator Kinerja --</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <div id="detailCapaian" class="info-target">
+                                <em>Silakan pilih indikator kinerja terlebih dahulu</em>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="capaianRealisasi">Realisasi</label>
+                            <input type="number" id="capaianRealisasi" placeholder="Masukkan nilai realisasi" step="any" min="0" required />
+                        </div>
+                        <div class="form-group" style="justify-content:flex-end;">
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Simpan</button>
+                                <button type="reset" class="btn btn-warning">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    History Capaian Kerja
+                    <span class="badge" id="totalCapaian">0 data</span>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tanggal</th>
+                                <th>Periode</th>
+                                <th>Tahun</th>
+                                <th>Indikator</th>
+                                <th>Target</th>
+                                <th>Realisasi</th>
+                                <th>Capaian</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableCapaian">
+                            <tr>
+                                <td colspan="9">
+                                    <div class="empty-state">
+                                        <div class="icon">-</div>
+                                        <h3>Belum ada data</h3>
+                                        <p>Silakan input data capaian kerja di atas.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-outline" onclick="exportCapaian()">Export Excel</button>
+                    <button class="btn btn-danger" onclick="hapusSemuaCapaian()">Hapus Semua</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================================
+        MODUL REALISASI ANGGARAN
+        ========================================================== -->
+        <div id="modulAnggaran" style="display:none;">
+            <div class="card">
+                <div class="card-title">
+                    Input Realisasi Anggaran
+                    <span class="badge">Pilih sub kegiatan di bawah</span>
+                </div>
+                <form id="formAnggaran" onsubmit="submitAnggaran(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="anggaranBulan">Periode Bulan</label>
+                            <select id="anggaranBulan" required>
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="anggaranTahun">Tahun</label>
+                            <select id="anggaranTahun" required>
+                                <option value="">-- Pilih Tahun --</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="anggaranSubKegiatan">Pilih Sub Kegiatan</label>
+                            <select id="anggaranSubKegiatan" required onchange="tampilkanDetailAnggaran()">
+                                <option value="">-- Pilih Sub Kegiatan --</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <div id="detailAnggaran" class="info-target">
+                                <em>Silakan pilih sub kegiatan terlebih dahulu</em>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="anggaranRealisasi">Realisasi (Rp)</label>
+                            <input type="number" id="anggaranRealisasi" placeholder="Masukkan realisasi dalam Rupiah" step="any" min="0" required />
+                        </div>
+                        <div class="form-group" style="justify-content:flex-end;">
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Simpan</button>
+                                <button type="reset" class="btn btn-warning">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    History Realisasi Anggaran
+                    <span class="badge" id="totalAnggaran">0 data</span>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tanggal</th>
+                                <th>Bulan</th>
+                                <th>Tahun</th>
+                                <th>Sub Kegiatan</th>
+                                <th>Target</th>
+                                <th>Pagu</th>
+                                <th>Realisasi</th>
+                                <th>% vs Target</th>
+                                <th>% vs Pagu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableAnggaran">
+                            <tr>
+                                <td colspan="11">
+                                    <div class="empty-state">
+                                        <div class="icon">-</div>
+                                        <h3>Belum ada data</h3>
+                                        <p>Silakan input realisasi anggaran di atas.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-outline" onclick="exportAnggaran()">Export Excel</button>
+                    <button class="btn btn-danger" onclick="hapusSemuaAnggaran()">Hapus Semua</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================================
+    TOAST NOTIFICATION
+    ========================================================== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ==========================================================
+    JAVASCRIPT
+    ========================================================== -->
+    <script>
+        // ================================================================
+        //  DATA MASTER
+        // ================================================================
+
+        // Data Capaian Kerja (6 indikator)
+        const MASTER_CAPAIAN = [{
+            id: 'c1',
+            sasaran: 'Tersedianya tenaga kerja yang kompeten dan produktif',
+            indikator: 'Persentase tingkat produktivitas tenaga kerja',
+            target: 51.25,
+            satuan: '%'
+        }, {
+            id: 'c2',
+            sasaran: 'Tersedianya tenaga kerja yang kompeten dan produktif',
+            indikator: 'Persentase pencari kerja yang kompeten',
+            target: 13.68,
+            satuan: '%'
+        }, {
+            id: 'c3',
+            sasaran: 'Tersedianya tenaga kerja yang kompeten dan produktif',
+            indikator: 'Persentase tenaga kerja yang terlindungi jaminan sosial',
+            target: 39,
+            satuan: '%'
+        }, {
+            id: 'c4',
+            sasaran: 'Meningkatnya kualitas dan efektivitas perencanaan dan pencapaian kinerja OPD',
+            indikator: 'Nilai kematangan OPD',
+            target: 34,
+            satuan: 'Angka'
+        }, {
+            id: 'c5',
+            sasaran: 'Meningkatnya tata kelola pemerintahan yang transparan, akuntabel dan partisipatif',
+            indikator: 'Nilai SAKIP (Angka)',
+            target: 63.50,
+            satuan: 'Angka'
+        }, {
+            id: 'c6',
+            sasaran: 'Meningkatnya efektivitas dan transparansi pelayanan publik',
+            indikator: 'Nilai Indeks Pelayanan Publik',
+            target: 4.03,
+            satuan: 'Angka'
+        }];
+
+        // Data Realisasi Anggaran (20 sub kegiatan)
+        const MASTER_ANGGARAN = [
+            { id: 'a1', sub: 'Penyusunan Dokumen Perencanaan Perangkat daerah', target: null, pagu: 3739500 },
+            { id: 'a2', sub: 'Penyediaan Gaji dan Tunjangan ASN', target: 1025537325, pagu: 2873110775 },
+            { id: 'a3', sub: 'Pelaksanaan penatausahaan dan Pengajuan/verifikasi keuangan SKPD', target: 9084750,
+                pagu: 36372000 },
+            { id: 'a4', sub: 'Penyediaan peralatan dan perlengkapan kantor', target: 5222103, pagu: 7693793 },
+            { id: 'a5', sub: 'Penyediaan Bahan Logistik kantor', target: 20744200, pagu: 144003300 },
+            { id: 'a6', sub: 'Penyediaan Jasa Komunikasi, Sumber daya air dan Listrik', target: 22500000,
+                pagu: 90000000 },
+            { id: 'a7', sub: 'Penyediaan Jasa Pelayanan Umum Kantor', target: 42520295, pagu: 117726827 },
+            { id: 'a8', sub: 'Penyediaan Jasa Pemeliharaan, Biaya pemeliharaan, Pajak, dan Perizinan Kendaraan Dinas operasional/lapangan',
+                target: null, pagu: 22850000 },
+            { id: 'a9', sub: 'Pemeliharaan/Rehabilitasi Gedung Kantor atau Bangunan lainnya', target: null,
+                pagu: 2221000 },
+            { id: 'a10', sub: 'Pemeliharaan/Rehabilitasi Sarana dan Prasarana Gedung Kantor atau Bangunan lainnya',
+                target: null, pagu: 7137600 },
+            { id: 'a11', sub: 'Penyusunan Rencana Tenaga Kerja Makro', target: null, pagu: 2700000 },
+            { id: 'a12', sub: 'Proses Pelaksanaan Pendidikan Pelatihan Keterampilan bagi Pencari kerja berdasarkan Klaster Kompetensi',
+                target: 128052100, pagu: 775275000 },
+            { id: 'a13', sub: 'Job Fair/Bursa Kerja', target: 3062200, pagu: 35945000 },
+            { id: 'a14', sub: 'Koordinasi dan Sinkronisasi kerjasama Pembangunan Transmigrasi yang berasal dari satu Daerah Kab/Kota',
+                target: null, pagu: 705000 },
+            { id: 'a15', sub: 'Pengesahan peraturan Perusahaan bagi Perusahaan', target: null, pagu: 27600000 },
+            { id: 'a16', sub: 'Penyelenggaraan Pendataan dan Informasi Sarana Hubin dan Jamsos TK serta Pengupahan',
+                target: 8186500, pagu: 24657500 },
+            { id: 'a17', sub: 'Pencegahan Perselisihan Hubungan Industrial, Mogok Kerja, dan penutupan Perusahaan yang berakibat/berdampak di satu Kabupaten/kota',
+                target: 1412000, pagu: 10000000 },
+            { id: 'a18', sub: 'Penyelesaian Perselisihan Hubungan Industrial, Mogok Kerja, dan penutupan Perusahaan yang berakibat/berdampak di satu Kabupaten/kota',
+                target: 1550000, pagu: 10000000 },
+            { id: 'a19', sub: 'Penyelenggaraan Verifikasi dan Rekapitulasi Keanggotaan pada Organisasi Pengusaha, Federasi, dan Konfederasi Serikat Pekerja/Serikat buruh serta Non afiliasi',
+                target: null, pagu: 10000000 },
+            { id: 'a20', sub: 'Pengembangan Pelaksanaan Jaminan Sosial Tenaga Kerja dan Fasilitas Ketenagakerjaan Pekerja',
+                target: 252669000, pagu: 1034640543 }
+        ];
+
+        // ================================================================
+        //  STORAGE
+        // ================================================================
+
+        function getKey(modul) {
+            return `simaker_${modul}`;
+        }
+
+        function loadData(modul) {
+            const key = getKey(modul);
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                try { return JSON.parse(stored); } catch { return []; }
+            }
+            return [];
+        }
+
+        function saveData(modul, data) {
+            const key = getKey(modul);
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // ================================================================
+        //  TOAST
+        // ================================================================
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = 'toast ' + type;
+            setTimeout(() => toast.classList.add('show'), 50);
+            clearTimeout(toast._hide);
+            toast._hide = setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ================================================================
+        //  FORMATTER
+        // ================================================================
+
+        function formatRupiah(num) {
+            if (num === undefined || num === null) return '-';
+            return 'Rp ' + Number(num).toLocaleString('id-ID');
+        }
+
+        function formatPersen(num) {
+            if (num === undefined || num === null || !isFinite(num)) return '-';
+            return num.toFixed(2) + '%';
+        }
+
+        function formatTanggal(ts) {
+            const d = new Date(ts);
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function now() {
+            return new Date().toISOString();
+        }
+
+        // ================================================================
+        //  GENERATE TAHUN
+        // ================================================================
+
+        function populateTahun() {
+            const selects = ['capaianTahun', 'anggaranTahun'];
+            selects.forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            sel.innerHTML = '<option value="">-- Pilih Tahun --</option>';
+            for (let tahun = 2026; tahun <= 2035; tahun++) {
+            const opt = document.createElement('option');
+            opt.value = tahun;
+            opt.textContent = tahun;
+            sel.appendChild(opt);
+            }
+            });
+        }
+
+        // ================================================================
+        //  CAPAIAN KERJA
+        // ================================================================
+
+        function populateCapaianDropdown() {
+            const sel = document.getElementById('capaianIndikator');
+            sel.innerHTML = '<option value="">-- Pilih Indikator Kinerja --</option>';
+            MASTER_CAPAIAN.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = `${item.indikator} (Target: ${item.target} ${item.satuan})`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function tampilkanDetailCapaian() {
+            const id = document.getElementById('capaianIndikator').value;
+            const div = document.getElementById('detailCapaian');
+            if (!id) {
+                div.innerHTML = '<em>Silakan pilih indikator kinerja terlebih dahulu</em>';
+                return;
+            }
+            const item = MASTER_CAPAIAN.find(d => d.id === id);
+            if (!item) return;
+            div.innerHTML = `
+                <strong>Sasaran Strategis:</strong> ${item.sasaran}<br>
+                <strong>Indikator:</strong> ${item.indikator}<br>
+                <strong>Target:</strong> ${item.target} ${item.satuan}
+            `;
+        }
+
+        function submitCapaian(e) {
+            e.preventDefault();
+            const periode = document.getElementById('capaianPeriode').value;
+            const tahun = document.getElementById('capaianTahun').value;
+            const indikatorId = document.getElementById('capaianIndikator').value;
+            const realisasi = parseFloat(document.getElementById('capaianRealisasi').value);
+
+            if (!periode) {
+                showToast('Silakan pilih triwulan!', 'error');
+                return;
+            }
+            if (!tahun) {
+                showToast('Silakan pilih tahun!', 'error');
+                return;
+            }
+            if (!indikatorId) {
+                showToast('Silakan pilih indikator!', 'error');
+                return;
+            }
+            if (isNaN(realisasi) || realisasi < 0) {
+                showToast('Masukkan realisasi yang valid!', 'error');
+                return;
+            }
+
+            const master = MASTER_CAPAIAN.find(d => d.id === indikatorId);
+            if (!master) return;
+
+            const capaian = (realisasi / master.target) * 100;
+
+            const data = loadData('capaian');
+            data.push({
+                id: Date.now(),
+                tanggal: now(),
+                periode: periode,
+                tahun: tahun,
+                indikatorId: master.id,
+                indikator: master.indikator,
+                target: master.target,
+                realisasi: realisasi,
+                capaian: capaian
+            });
+            saveData('capaian', data);
+
+            renderCapaian();
+            document.getElementById('formCapaian').reset();
+            document.getElementById('detailCapaian').innerHTML = '<em>Silakan pilih indikator kinerja terlebih dahulu</em>';
+            showToast('Data "' + master.indikator + '" berhasil disimpan!');
+        }
+
+        function renderCapaian() {
+            const data = loadData('capaian');
+            const tbody = document.getElementById('tableCapaian');
+            const total = document.getElementById('totalCapaian');
+
+            total.textContent = data.length + ' data';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="9">
+                        <div class="empty-state">
+                            <div class="icon">-</div>
+                            <h3>Belum ada data</h3>
+                            <p>Silakan input data capaian kerja di atas.</p>
+                        </div>
+                    </td></tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            const sorted = [...data].reverse();
+            sorted.forEach((item, idx) => {
+                const no = data.length - idx;
+                html += `
+                    <tr>
+                        <td>${no}</td>
+                        <td>${formatTanggal(item.tanggal)}</td>
+                        <td>${item.periode}</td>
+                        <td>${item.tahun}</td>
+                        <td>${item.indikator}</td>
+                        <td>${item.target}</td>
+                        <td>${item.realisasi}</td>
+                        <td><strong>${formatPersen(item.capaian)}</strong></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="hapusCapaian(${item.id})">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function hapusCapaian(id) {
+            if (!confirm('Yakin ingin menghapus data ini?')) return;
+            let data = loadData('capaian');
+            data = data.filter(d => d.id !== id);
+            saveData('capaian', data);
+            renderCapaian();
+            showToast('Data dihapus!');
+        }
+
+        function hapusSemuaCapaian() {
+            if (!confirm('Hapus SEMUA data capaian? Tindakan ini tidak bisa dibatalkan!')) return;
+            saveData('capaian', []);
+            renderCapaian();
+            showToast('Semua data capaian dihapus.', 'error');
+        }
+
+        function exportCapaian() {
+            const data = loadData('capaian');
+            if (data.length === 0) {
+                showToast('Tidak ada data untuk diexport.', 'error');
+                return;
+            }
+            let csv = 'No,Tanggal,Periode,Tahun,Indikator,Target,Realisasi,Capaian(%)\n';
+            data.forEach((d, i) => {
+                csv +=
+                    `${i+1},${formatTanggal(d.tanggal)},${d.periode},${d.tahun},"${d.indikator}",${d.target},${d.realisasi},${d.capaian.toFixed(2)}\n`;
+            });
+            downloadFile(csv, 'capaian.csv', 'text/csv');
+            showToast('Data diexport!');
+        }
+
+        // ================================================================
+        //  REALISASI ANGGARAN
+        // ================================================================
+
+        function populateAnggaranDropdown() {
+            const sel = document.getElementById('anggaranSubKegiatan');
+            sel.innerHTML = '<option value="">-- Pilih Sub Kegiatan --</option>';
+            MASTER_ANGGARAN.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                const target = item.target ? formatRupiah(item.target) : 'Tidak ada';
+                opt.textContent = `${item.sub} (Target: ${target})`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function tampilkanDetailAnggaran() {
+            const id = document.getElementById('anggaranSubKegiatan').value;
+            const div = document.getElementById('detailAnggaran');
+            if (!id) {
+                div.innerHTML = '<em>Silakan pilih sub kegiatan terlebih dahulu</em>';
+                return;
+            }
+            const item = MASTER_ANGGARAN.find(d => d.id === id);
+            if (!item) return;
+            div.innerHTML = `
+                <strong>Sub Kegiatan:</strong> ${item.sub}<br>
+                <strong>Target:</strong> ${item.target ? formatRupiah(item.target) : 'Tidak ada'}<br>
+                <strong>Pagu:</strong> ${formatRupiah(item.pagu)}
+            `;
+        }
+
+        function submitAnggaran(e) {
+            e.preventDefault();
+            const bulan = document.getElementById('anggaranBulan').value;
+            const tahun = document.getElementById('anggaranTahun').value;
+            const subId = document.getElementById('anggaranSubKegiatan').value;
+            const realisasi = parseFloat(document.getElementById('anggaranRealisasi').value);
+
+            if (!bulan) {
+                showToast('Silakan pilih bulan!', 'error');
+                return;
+            }
+            if (!tahun) {
+                showToast('Silakan pilih tahun!', 'error');
+                return;
+            }
+            if (!subId) {
+                showToast('Silakan pilih sub kegiatan!', 'error');
+                return;
+            }
+            if (isNaN(realisasi) || realisasi < 0) {
+                showToast('Masukkan realisasi yang valid!', 'error');
+                return;
+            }
+
+            const master = MASTER_ANGGARAN.find(d => d.id === subId);
+            if (!master) return;
+
+            let persenTarget = null;
+            if (master.target && master.target > 0) {
+                persenTarget = (realisasi / master.target) * 100;
+            }
+            const persenPagu = (realisasi / master.pagu) * 100;
+
+            const data = loadData('anggaran');
+            data.push({
+                id: Date.now(),
+                tanggal: now(),
+                bulan: bulan,
+                tahun: tahun,
+                subId: master.id,
+                sub: master.sub,
+                target: master.target,
+                pagu: master.pagu,
+                realisasi: realisasi,
+                persenTarget: persenTarget,
+                persenPagu: persenPagu
+            });
+            saveData('anggaran', data);
+
+            renderAnggaran();
+            document.getElementById('formAnggaran').reset();
+            document.getElementById('detailAnggaran').innerHTML = '<em>Silakan pilih sub kegiatan terlebih dahulu</em>';
+            showToast('Data "' + master.sub + '" berhasil disimpan!');
+        }
+
+        function renderAnggaran() {
+            const data = loadData('anggaran');
+            const tbody = document.getElementById('tableAnggaran');
+            const total = document.getElementById('totalAnggaran');
+
+            total.textContent = data.length + ' data';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="11">
+                        <div class="empty-state">
+                            <div class="icon">-</div>
+                            <h3>Belum ada data</h3>
+                            <p>Silakan input realisasi anggaran di atas.</p>
+                        </div>
+                    </td></tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            const sorted = [...data].reverse();
+            sorted.forEach((item, idx) => {
+                const no = data.length - idx;
+                html += `
+                    <tr>
+                        <td>${no}</td>
+                        <td>${formatTanggal(item.tanggal)}</td>
+                        <td>${item.bulan}</td>
+                        <td>${item.tahun}</td>
+                        <td>${item.sub}</td>
+                        <td>${item.target ? formatRupiah(item.target) : '-'}</td>
+                        <td>${formatRupiah(item.pagu)}</td>
+                        <td>${formatRupiah(item.realisasi)}</td>
+                        <td>${item.persenTarget !== null ? formatPersen(item.persenTarget) : '-'}</td>
+                        <td><strong>${formatPersen(item.persenPagu)}</strong></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="hapusAnggaran(${item.id})">Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function hapusAnggaran(id) {
+            if (!confirm('Yakin ingin menghapus data ini?')) return;
+            let data = loadData('anggaran');
+            data = data.filter(d => d.id !== id);
+            saveData('anggaran', data);
+            renderAnggaran();
+            showToast('Data dihapus!');
+        }
+
+        function hapusSemuaAnggaran() {
+            if (!confirm('Hapus SEMUA data anggaran? Tindakan ini tidak bisa dibatalkan!')) return;
+            saveData('anggaran', []);
+            renderAnggaran();
+            showToast('Semua data anggaran dihapus.', 'error');
+        }
+
+        function exportAnggaran() {
+            const data = loadData('anggaran');
+            if (data.length === 0) {
+                showToast('Tidak ada data untuk diexport.', 'error');
+                return;
+            }
+            let csv = 'No,Tanggal,Bulan,Tahun,Sub Kegiatan,Target,Pagu,Realisasi,% vs Target,% vs Pagu\n';
+            data.forEach((d, i) => {
+                const target = d.target ? d.target : '-';
+                const pTarget = d.persenTarget !== null ? d.persenTarget.toFixed(2) : '-';
+                csv +=
+                    `${i+1},${formatTanggal(d.tanggal)},${d.bulan},${d.tahun},"${d.sub}",${target},${d.pagu},${d.realisasi},${pTarget},${d.persenPagu.toFixed(2)}\n`;
+            });
+            downloadFile(csv, 'anggaran.csv', 'text/csv');
+            showToast('Data diexport!');
+        }
+
+        // ================================================================
+        //  DOWNLOAD FILE
+        // ================================================================
+
+        function downloadFile(content, filename, mimeType = 'text/csv') {
+            const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ================================================================
+        //  TOGGLE MODUL
+        // ================================================================
+
+        function switchModul(modul) {
+            const btnCapaian = document.getElementById('btnCapaian');
+            const btnAnggaran = document.getElementById('btnAnggaran');
+            const divCapaian = document.getElementById('modulCapaian');
+            const divAnggaran = document.getElementById('modulAnggaran');
+
+            if (modul === 'capaian') {
+                btnCapaian.classList.add('active');
+                btnAnggaran.classList.remove('active');
+                divCapaian.style.display = 'block';
+                divAnggaran.style.display = 'none';
+                renderCapaian();
+            } else {
+                btnAnggaran.classList.add('active');
+                btnCapaian.classList.remove('active');
+                divAnggaran.style.display = 'block';
+                divCapaian.style.display = 'none';
+                renderAnggaran();
+            }
+        }
+
+        // ================================================================
+        //  INIT
+        // ================================================================
+
+        populateTahun();
+        populateCapaianDropdown();
+        populateAnggaranDropdown();
+
+        document.getElementById('btnCapaian').addEventListener('click', function() {
+            switchModul('capaian');
+        });
+
+        document.getElementById('btnAnggaran').addEventListener('click', function() {
+            switchModul('anggaran');
+        });
+
+        switchModul('capaian');
+    </script>
+
+</body>
+</html>
