@@ -662,7 +662,7 @@
                                 <div class="form-grid">
                                     <div class="form-group">
                                         <label for="anggaranTahun">Tahun</label>
-                                        <select id="anggaranTahun" required>
+                                        <select id="anggaranTahun" required onchange="tampilkanDetailAnggaran()">
                                             <option value="">-- Pilih Tahun --</option>
                                             <option value="2026">2026</option>
                                             <option value="2027">2027</option>
@@ -673,7 +673,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="anggaranBulan">Bulan Berjalan</label>
-                                        <select id="anggaranBulan" required>
+                                        <select id="anggaranBulan" required onchange="tampilkanDetailAnggaran()">
                                             <option value="">-- Pilih Bulan --</option>
                                             <option value="Januari">Januari</option>
                                             <option value="Februari">Februari</option>
@@ -702,15 +702,15 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="realisasiLalu" style="color: #d97706; font-weight: bold;">Realisasi s/d Bulan Lalu (Rp)</label>
-                                        <input type="number" id="realisasiLalu" placeholder="0" step="any" min="0" />
+                                        <input type="number" id="realisasiLalu" placeholder="0" step="any" min="0" oninput="hitungPratinjauAnggaran()" />
                                     </div>
                                     <div class="form-group">
                                         <label for="realisasiIni" style="color: #d97706; font-weight: bold;">Realisasi Bulan Ini (Rp)</label>
-                                        <input type="number" id="realisasiIni" placeholder="0" step="any" min="0" />
+                                        <input type="number" id="realisasiIni" placeholder="0" step="any" min="0" oninput="hitungPratinjauAnggaran()" />
                                     </div>
                                     <div class="form-group">
                                         <label for="targetUang" style="color: #d97706; font-weight: bold;">Target Uang s/d Bulan Ini (Rp)</label>
-                                        <input type="number" id="targetUang" placeholder="0" step="any" min="0" />
+                                        <input type="number" id="targetUang" placeholder="0" step="any" min="0" oninput="hitungPratinjauAnggaran()" />
                                     </div>
                                     <div class="form-group"></div>
                                     <div class="form-group">
@@ -729,6 +729,51 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+
+
+                        <div id="menuRiwayatAnggaran" class="card">
+                            <div class="card-title">
+                                Riwayat Input Laporan
+                                <span class="badge" id="totalRiwayatAnggaran">0 data</span>
+                            </div>
+                            <div style="margin-bottom:12px;">
+                                <label style="font-size:13px; font-weight:600; color:#475569; margin-right:8px;">Tahun:</label>
+                                <select id="riwayatTahunAnggaran" onchange="renderRiwayatAnggaran()" style="padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1;">
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                    <option value="2028">2028</option>
+                                    <option value="2029">2029</option>
+                                    <option value="2030">2030</option>
+                                </select>
+                            </div>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Tanggal</th>
+                                            <th>Bulan</th>
+                                            <th class="text-left">Sub Kegiatan</th>
+                                            <th>Pagu</th>
+                                            <th>Real. s/d Bulan Lalu</th>
+                                            <th>Real. Bulan Ini</th>
+                                            <th>Real. s/d Bulan Ini</th>
+                                            <th>% Real.</th>
+                                            <th>Target Uang</th>
+                                            <th>Fisik Target</th>
+                                            <th>Fisik Real</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelRiwayatAnggaran">
+                                        <tr><td colspan="13" class="text-center">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+                                <button class="btn btn-danger" onclick="hapusSemuaAnggaran()">Hapus Semua (Tahun Terpilih)</button>
+                            </div>
                         </div>
 
                         <div id="menuTabelAnggaran" class="card" style="display:none;">
@@ -845,7 +890,7 @@
         let activeLevel = 'Tujuan'; 
         let activePage = 'dashboard';
         let cachedTargetTW = {}; 
-        let cachedMasterAnggaran = []; // Diubah menjadi Array
+        let cachedMasterAnggaran = {}; // Object: { idSub: { id_sub, 2026: nominal, ... } }
 
         // ================================================================
         //  DATA MASTER CAPAIAN KINERJA
@@ -990,6 +1035,8 @@
                 'anggaran': 'Modul Realisasi Anggaran'
             };
             document.getElementById('pageTitle').textContent = titles[page];
+
+            if (page === 'anggaran') renderRiwayatAnggaran();
         }
 
         // ================================================================
@@ -1473,11 +1520,30 @@
             });
             
             document.getElementById('menuInputAnggaran').style.display = menu === 'input' ? 'block' : 'none';
+            document.getElementById('menuRiwayatAnggaran').style.display = menu === 'input' ? 'block' : 'none';
             document.getElementById('menuTabelAnggaran').style.display = menu === 'tabel' ? 'block' : 'none';
             document.getElementById('menuMasterAnggaran').style.display = menu === 'master' ? 'block' : 'none';
 
+            if (menu === 'input') renderRiwayatAnggaran();
             if (menu === 'tabel') renderTabelRekap();
             if (menu === 'master') renderMasterAnggaran();
+        }
+
+        // Peta cepat id sub kegiatan -> data master
+        const SUB_BY_ID = {};
+        MASTER_HIERARKI.forEach(p => p.children.forEach(k => k.children.forEach(s => {
+            SUB_BY_ID[s.id] = { ...s, kegiatan: k, program: p };
+        })));
+
+        // Satu-satunya sumber angka pagu:
+        // 1) nilai yang disimpan di Firestore (menu Pengaturan Anggaran), jika ada
+        // 2) jika belum ada: nilai bawaan di MASTER_HIERARKI (khusus 2026)
+        function getPagu(subId, tahun) {
+            const saved = cachedMasterAnggaran[subId];
+            if (saved && typeof saved[tahun] === 'number') return saved[tahun];
+            const master = SUB_BY_ID[subId];
+            if (master && String(tahun) === '2026' && typeof master.anggaran2026 === 'number') return master.anggaran2026;
+            return 0;
         }
 
         async function renderMasterAnggaran() {
@@ -1492,12 +1558,7 @@
                 MASTER_HIERARKI.forEach(p => {
                     p.children.forEach(k => {
                         k.children.forEach(s => {
-                            let val = '';
-                            if (cachedMasterAnggaran[s.id] && cachedMasterAnggaran[s.id][tahun] !== undefined) {
-                                val = cachedMasterAnggaran[s.id][tahun];
-                            } else {
-                                val = s.anggaran2026 !== undefined ? s.anggaran2026 : 0;
-                            }
+                            const val = getPagu(s.id, tahun);
 
                             html += `
                                 <tr>
@@ -1570,11 +1631,14 @@
             });
         }
 
+        let pratinjauPagu = 0;
+
         async function tampilkanDetailAnggaran() {
             const id = document.getElementById('anggaranSubKegiatan').value;
             const tahun = document.getElementById('anggaranTahun').value;
+            const bulan = document.getElementById('anggaranBulan').value;
             const div = document.getElementById('detailAnggaran');
-            
+
             if (!id) { div.innerHTML = '<em>Silakan pilih sub kegiatan</em>'; return; }
             if (!tahun) { div.innerHTML = '<em style="color:red">Silakan pilih Tahun terlebih dahulu di atas!</em>'; return; }
 
@@ -1583,12 +1647,60 @@
             try {
                 await ambilMasterAnggaranTerbaru();
 
-                const nominal = cachedMasterAnggaran[id] && cachedMasterAnggaran[id][tahun] ? cachedMasterAnggaran[id][tahun] : 0;
-                div.innerHTML = `<strong>Jumlah Anggaran (Pagu) Tahun ${tahun}:</strong> Rp ${formatRupiah(nominal)}`;
+                const s = SUB_BY_ID[id];
+                pratinjauPagu = getPagu(id, tahun);
+
+                // Realisasi s/d bulan lalu otomatis = total realisasi bulan-bulan sebelumnya
+                let infoLalu = '<em style="color:red">Pilih Bulan Berjalan di atas</em>';
+                if (bulan) {
+                    const lalu = await hitungRealisasiSdBulanLalu(id, tahun, bulan);
+                    document.getElementById('realisasiLalu').value = lalu;
+                    infoLalu = 'Rp ' + formatRupiah(lalu) + ' <span style="font-size:11px">(otomatis dari input bulan sebelumnya, boleh diubah)</span>';
+                }
+
+                const paguTxt = pratinjauPagu > 0
+                    ? 'Rp ' + formatRupiah(pratinjauPagu)
+                    : '<span style="color:red">Rp 0 (belum diset di menu Pengaturan Anggaran)</span>';
+
+                div.innerHTML = `
+                    <strong>Sub Kegiatan:</strong> ${s.nama}<br>
+                    <strong>Kegiatan:</strong> ${s.kegiatan.nama}<br>
+                    <strong>Jumlah Anggaran (Pagu) Tahun ${tahun}:</strong> ${paguTxt}<br>
+                    <strong style="color:#d97706">Realisasi s/d Bulan Lalu:</strong> ${infoLalu}<br>
+                    <span id="pratinjauAnggaran"></span>
+                `;
+                hitungPratinjauAnggaran();
             } catch (error) {
                 console.error("Error loading anggaran detail:", error);
                 div.innerHTML = '<em style="color:red">Gagal memuat data Pagu.</em>';
             }
+        }
+
+        async function hitungRealisasiSdBulanLalu(subId, tahun, bulan) {
+            const urutBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            const idxBulan = urutBulan.indexOf(bulan);
+            const { collection, getDocs, query, where } = window.fs;
+            const q = query(collection(window.db, "realisasi_anggaran"),
+                where("tahun", "==", tahun), where("subId", "==", subId));
+            const snap = await getDocs(q);
+            let total = 0;
+            snap.forEach(d => {
+                const x = d.data();
+                if (urutBulan.indexOf(x.bulan) < idxBulan) total += Number(x.realisasiIni) || 0;
+            });
+            return total;
+        }
+
+        function hitungPratinjauAnggaran() {
+            const el = document.getElementById('pratinjauAnggaran');
+            if (!el) return;
+            const lalu = parseFloat(document.getElementById('realisasiLalu').value) || 0;
+            const ini = parseFloat(document.getElementById('realisasiIni').value) || 0;
+            const target = parseFloat(document.getElementById('targetUang').value) || 0;
+            const sd = lalu + ini;
+            const persen = pratinjauPagu > 0 ? (sd / pratinjauPagu) * 100 : 0;
+            const persenTarget = pratinjauPagu > 0 ? (target / pratinjauPagu) * 100 : 0;
+            el.innerHTML = `<strong style="color:#0369a1">Pratinjau:</strong> Realisasi s/d bulan ini Rp ${formatRupiah(sd)} (${formatPersen(persen)} dari pagu), target Rp ${formatRupiah(target)} (${formatPersen(persenTarget)})`;
         }
 
         async function submitAnggaran(e) {
@@ -1608,6 +1720,13 @@
 
             if (!tahun || !bulan || !subId) { showToast('Harap lengkapi Tahun, Bulan, dan Sub Kegiatan!', 'error'); return; }
 
+            const master = SUB_BY_ID[subId];
+            await ambilMasterAnggaranTerbaru();
+            const pagu = getPagu(subId, tahun);
+            if (pagu <= 0) { showToast('Pagu tahun ini belum diset di menu Pengaturan Anggaran!', 'error'); return; }
+            const realisasiSd = realisasiLalu + realisasiIni;
+            const persenRealisasi = (realisasiSd / pagu) * 100;
+
             btnSimpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
             btnSimpan.disabled = true;
 
@@ -1622,8 +1741,11 @@
                 const querySnapshot = await getDocs(q);
                 
                 const dataToSave = {
-                    tahun, bulan, subId, 
-                    realisasiLalu, realisasiIni, targetUang, targetFisik, realisasiFisik
+                    tanggal: new Date().toISOString(),
+                    tahun, bulan, subId,
+                    kode: master.kode, nama: master.nama,
+                    pagu, realisasiLalu, realisasiIni, realisasiSd, persenRealisasi,
+                    targetUang, targetFisik, realisasiFisik
                 };
 
                 if (!querySnapshot.empty) {
@@ -1642,11 +1764,11 @@
 
                 document.getElementById('filterTahun').value = tahun;
                 document.getElementById('filterBulan').value = bulan;
-                await renderTabelRekap();
-                
+                document.getElementById('riwayatTahunAnggaran').value = tahun;
+
                 document.getElementById('formAnggaran').reset();
                 document.getElementById('detailAnggaran').innerHTML = '<em>Silakan pilih sub kegiatan</em>';
-                switchMenuAnggaran('tabel');
+                await renderRiwayatAnggaran();
 
             } catch (error) {
                 console.error("Error saving anggaran:", error);
@@ -1654,6 +1776,94 @@
             } finally {
                 btnSimpan.innerHTML = originalBtnText;
                 btnSimpan.disabled = false;
+            }
+        }
+
+        async function renderRiwayatAnggaran() {
+            const tbody = document.getElementById('tabelRiwayatAnggaran');
+            const total = document.getElementById('totalRiwayatAnggaran');
+            const tahun = document.getElementById('riwayatTahunAnggaran').value;
+            const urutBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+            try {
+                const { collection, getDocs, query, where } = window.fs;
+                const q = query(collection(window.db, "realisasi_anggaran"), where("tahun", "==", tahun));
+                const snap = await getDocs(q);
+
+                let data = [];
+                snap.forEach(d => data.push({ firebaseId: d.id, ...d.data() }));
+                data.sort((a, b) => urutBulan.indexOf(b.bulan) - urutBulan.indexOf(a.bulan) || String(a.kode || a.subId).localeCompare(String(b.kode || b.subId)));
+
+                total.textContent = data.length + ' data';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="13" class="text-center">Belum ada data</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.forEach((item, idx) => {
+                    const s = SUB_BY_ID[item.subId];
+                    const nama = item.nama || (s ? s.nama : item.subId);
+                    const kode = item.kode || (s ? s.kode : '');
+                    const lalu = Number(item.realisasiLalu) || 0;
+                    const ini = Number(item.realisasiIni) || 0;
+                    const sd = lalu + ini;
+                    const pagu = item.pagu !== undefined ? Number(item.pagu) : getPagu(item.subId, item.tahun);
+                    const persen = pagu > 0 ? (sd / pagu) * 100 : 0;
+                    html += `
+                        <tr>
+                            <td class="text-center">${idx + 1}</td>
+                            <td class="text-center">${item.tanggal ? formatTanggal(item.tanggal) : '-'}</td>
+                            <td class="text-center">${item.bulan}</td>
+                            <td class="text-left" style="min-width:220px;"><span style="font-size:11px;color:#64748b;">${kode}</span><br>${nama}</td>
+                            <td>${formatRupiah(pagu)}</td>
+                            <td>${formatRupiah(lalu)}</td>
+                            <td>${formatRupiah(ini)}</td>
+                            <td><strong>${formatRupiah(sd)}</strong></td>
+                            <td><strong>${formatPersen(persen)}</strong></td>
+                            <td>${formatRupiah(item.targetUang)}</td>
+                            <td class="text-center">${item.targetFisik || 0}%</td>
+                            <td class="text-center">${item.realisasiFisik || 0}%</td>
+                            <td class="text-center"><button class="btn btn-danger btn-sm" onclick="hapusAnggaran('${item.firebaseId}')">Hapus</button></td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading riwayat anggaran:", error);
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center text-danger">Gagal memuat data dari server. (${error.code || error.message})</td></tr>`;
+            }
+        }
+
+        async function hapusAnggaran(firebaseId) {
+            if (!confirm('Yakin ingin menghapus data ini dari server?')) return;
+            try {
+                const { doc, deleteDoc } = window.fs;
+                await deleteDoc(doc(window.db, "realisasi_anggaran", firebaseId));
+                showToast('Data dihapus dari server!');
+                await renderRiwayatAnggaran();
+            } catch (error) {
+                console.error("Error deleting anggaran:", error);
+                showToast('Gagal menghapus data.', 'error');
+            }
+        }
+
+        async function hapusSemuaAnggaran() {
+            const tahun = document.getElementById('riwayatTahunAnggaran').value;
+            if (!confirm('Hapus SEMUA data realisasi anggaran tahun ' + tahun + '? Tindakan ini tidak bisa dibatalkan!')) return;
+            try {
+                const { collection, getDocs, query, where, doc, deleteDoc } = window.fs;
+                const snap = await getDocs(query(collection(window.db, "realisasi_anggaran"), where("tahun", "==", tahun)));
+                if (snap.empty) { showToast('Tidak ada data untuk dihapus.', 'error'); return; }
+                const promises = [];
+                snap.forEach(d => promises.push(deleteDoc(doc(window.db, "realisasi_anggaran", d.id))));
+                await Promise.all(promises);
+                showToast('Semua data berhasil dihapus.');
+                await renderRiwayatAnggaran();
+            } catch (error) {
+                console.error("Error deleting all anggaran:", error);
+                showToast('Gagal menghapus semua data.', 'error');
             }
         }
 
@@ -1694,14 +1904,9 @@
                         k.children.forEach(s => {
                             const r = realisasiData.find(d => d.subId === s.id) || { realisasiLalu: 0, realisasiIni: 0, targetUang: 0, targetFisik: 0, realisasiFisik: 0 };
                             
-                            // PERBAIKAN: Ambil data anggaran menggunakan 'id_sub'
-                            let sAnggaran = 0;
-                            const foundData = cachedMasterAnggaran.find(item => item.id_sub === s.id);
-                            if (foundData && foundData[tahunAktif]) {
-                                sAnggaran = foundData[tahunAktif];
-                            }
+                            const sAnggaran = getPagu(s.id, tahunAktif);
 
-                            const sRLalu = r.realisasiLalu, sRIni = r.realisasiIni, sTUang = r.targetUang, sRsd = sRLalu + sRIni;
+                            const sRLalu = Number(r.realisasiLalu) || 0, sRIni = Number(r.realisasiIni) || 0, sTUang = Number(r.targetUang) || 0, sRsd = sRLalu + sRIni;
                             const pLalu = sAnggaran > 0 ? (sRLalu / sAnggaran) * 100 : 0;
                             const pIni = sAnggaran > 0 ? (sRIni / sAnggaran) * 100 : 0;
                             const pTUang = sAnggaran > 0 ? (sTUang / sAnggaran) * 100 : 0;
@@ -1718,7 +1923,7 @@
                                     <td>${formatRupiah(sRIni)}</td><td>${formatPersen(pIni)}</td>
                                     <td>${formatRupiah(sTUang)}</td><td>${formatPersen(pTUang)}</td>
                                     <td>${formatRupiah(sRsd)}</td><td>${formatPersen(pRsd)}</td>
-                                    <td class="text-center">${r.targetFisik}%</td><td class="text-center">${r.realisasiFisik}%</td>
+                                    <td class="text-center">${r.targetFisik || 0}%</td><td class="text-center">${r.realisasiFisik || 0}%</td>
                                 </tr>
                             `;
                         });
@@ -1770,7 +1975,7 @@
 
             } catch (error) {
                 console.error("Error loading rekap:", error);
-                tbody.innerHTML = `<tr><td colspan="13" class="text-center text-danger">Gagal memuat data dari server.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center text-danger">Gagal memuat data dari server. (${error.code || error.message})</td></tr>`;
             }
         }
 
@@ -1795,11 +2000,16 @@
                     return;
                 }
 
-                let csv = 'No,Tanggal Input,Tahun,Bulan,Sub Kegiatan ID,Realisasi Lalu (Rp),Realisasi Ini (Rp),Target Uang (Rp),Target Fisik (%),Realisasi Fisik (%)\n';
+                await ambilMasterAnggaranTerbaru();
+                let csv = 'No,Tanggal Input,Tahun,Bulan,Kode,Sub Kegiatan,Pagu (Rp),Realisasi Lalu (Rp),Realisasi Ini (Rp),Realisasi s/d Bulan Ini (Rp),% Realisasi,Target Uang (Rp),Target Fisik (%),Realisasi Fisik (%)\n';
                 let i = 1;
                 querySnapshot.forEach((doc) => {
                     const d = doc.data();
-                    csv += `${i},"${formatTanggal(new Date())}",${d.tahun},${d.bulan},"${d.subId}",${d.realisasiLalu},${d.realisasiIni},${d.targetUang},${d.targetFisik},${d.realisasiFisik}\n`;
+                    const s = SUB_BY_ID[d.subId] || {};
+                    const pagu = d.pagu !== undefined ? Number(d.pagu) : getPagu(d.subId, d.tahun);
+                    const sd = (Number(d.realisasiLalu) || 0) + (Number(d.realisasiIni) || 0);
+                    const persen = pagu > 0 ? ((sd / pagu) * 100).toFixed(2) : '0.00';
+                    csv += `${i},"${d.tanggal ? formatTanggal(d.tanggal) : ''}",${d.tahun},${d.bulan},"${d.kode || s.kode || d.subId}","${(d.nama || s.nama || '').replace(/"/g, '""')}",${pagu},${d.realisasiLalu || 0},${d.realisasiIni || 0},${sd},${persen},${d.targetUang || 0},${d.targetFisik || 0},${d.realisasiFisik || 0}\n`;
                     i++;
                 });
                 
