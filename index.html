@@ -968,13 +968,12 @@
             document.getElementById('namaUser').textContent = user.nama;
             
             populateTahunCapaian();
-            populateSubKegiatanDropdown(); // <-- PERBAIKAN: Memanggil fungsi dropdown
             switchLevel('Tujuan'); 
             
             switchPage('dashboard');
         }
 
-              function switchPage(page) {
+        function switchPage(page) {
             activePage = page;
             
             document.getElementById('navDashboard').classList.toggle('active', page === 'dashboard');
@@ -990,7 +989,7 @@
                 populateSubKegiatanDropdown(); 
             }
 
-            const titles = { /* ... */ };
+            const titles = {
                 'dashboard': 'Dashboard SIMAKER',
                 'capaian': 'Modul Capaian Kinerja',
                 'anggaran': 'Modul Realisasi Anggaran'
