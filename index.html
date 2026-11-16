@@ -845,7 +845,7 @@
         let activeLevel = 'Tujuan'; 
         let activePage = 'dashboard';
         let cachedTargetTW = {}; 
-        let cachedMasterAnggaran = {}; 
+        let cachedMasterAnggaran = []; // Diubah menjadi Array
 
         // ================================================================
         //  DATA MASTER CAPAIAN KINERJA
@@ -1038,7 +1038,7 @@
         }
 
         // ================================================================
-        //  MODUL CAPAIAN KINERJA
+        //  MODUL CAPAIAN KINERJA (FIREBASE VERSION)
         // ================================================================
         function populateTahunCapaian() {
             const sel = document.getElementById('capaianTahun');
@@ -1076,7 +1076,9 @@
                 
                 document.getElementById('tableCapaian').innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Memuat data...</h3></div></td></tr>`;
                 
+                // Tarik target terbaru saat ganti level
                 await ambilTargetTerbaru();
+
                 await renderCapaian();
             }
         }
@@ -1462,7 +1464,7 @@
         }
 
         // ================================================================
-        //  MODUL REALISASI ANGGARAN
+        //  MODUL REALISASI ANGGARAN (FIREBASE VERSION)
         // ================================================================
         function switchMenuAnggaran(menu) {
             document.querySelectorAll('#navMenuAnggaran button').forEach(btn => {
@@ -1691,8 +1693,14 @@
 
                         k.children.forEach(s => {
                             const r = realisasiData.find(d => d.subId === s.id) || { realisasiLalu: 0, realisasiIni: 0, targetUang: 0, targetFisik: 0, realisasiFisik: 0 };
-                            const sAnggaran = cachedMasterAnggaran[s.id] && cachedMasterAnggaran[s.id][tahunAktif] ? cachedMasterAnggaran[s.id][tahunAktif] : 0;
                             
+                            // PERBAIKAN: Ambil data anggaran menggunakan 'id_sub'
+                            let sAnggaran = 0;
+                            const foundData = cachedMasterAnggaran.find(item => item.id_sub === s.id);
+                            if (foundData && foundData[tahunAktif]) {
+                                sAnggaran = foundData[tahunAktif];
+                            }
+
                             const sRLalu = r.realisasiLalu, sRIni = r.realisasiIni, sTUang = r.targetUang, sRsd = sRLalu + sRIni;
                             const pLalu = sAnggaran > 0 ? (sRLalu / sAnggaran) * 100 : 0;
                             const pIni = sAnggaran > 0 ? (sRIni / sAnggaran) * 100 : 0;
