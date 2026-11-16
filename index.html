@@ -984,7 +984,6 @@
             document.getElementById('pageCapaian').style.display = page === 'capaian' ? 'block' : 'none';
             document.getElementById('pageAnggaran').style.display = page === 'anggaran' ? 'block' : 'none';
 
-            // TAMBAHKAN BARIS INI
             if (page === 'anggaran') {
                 populateSubKegiatanDropdown(); 
             }
@@ -1081,7 +1080,24 @@
                 
                 document.getElementById('tableCapaian').innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Memuat data...</h3></div></td></tr>`;
                 
+                // Ambil data target terbaru langsung dari server saat ganti level
+                await ambilTargetTerbaru();
+
                 await renderCapaian();
+            }
+        }
+
+        async function ambilTargetTerbaru() {
+            try {
+                const { collection, getDocs } = window.fs;
+                const querySnapshot = await getDocs(collection(window.db, "pengaturan_target_tw"));
+                cachedTargetTW = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    cachedTargetTW[data.id_indikator] = data;
+                });
+            } catch (error) {
+                console.error("Error loading target:", error);
             }
         }
 
@@ -1092,14 +1108,7 @@
             tbody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat data...</td></tr>';
             
             try {
-                const { collection, getDocs } = window.fs;
-                const querySnapshot = await getDocs(collection(window.db, "pengaturan_target_tw"));
-                
-                cachedTargetTW = {};
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    cachedTargetTW[data.id_indikator] = data;
-                });
+                await ambilTargetTerbaru();
 
                 let html = '';
                 MASTER_CAPAIAN.forEach(item => {
@@ -1146,6 +1155,9 @@
                 
                 await setDoc(docRef, dataToSave);
                 showToast('Target TW berhasil diupdate ke server');
+                
+                // Update cache lokal agar form langsung berubah
+                cachedTargetTW[id] = dataToSave;
             } catch (error) {
                 console.error("Error saving target:", error);
                 showToast('Gagal menyimpan Target TW', 'error');
@@ -1479,14 +1491,7 @@
             tbody.innerHTML = '<tr><td colspan="2" class="text-center">Memuat data...</td></tr>';
 
             try {
-                const { collection, getDocs } = window.fs;
-                const querySnapshot = await getDocs(collection(window.db, "pengaturan_anggaran"));
-                
-                cachedMasterAnggaran = {};
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    cachedMasterAnggaran[data.id_sub] = data;
-                });
+                await ambilMasterAnggaranTerbaru();
 
                 let html = '';
                 MASTER_HIERARKI.forEach(p => {
@@ -1509,6 +1514,20 @@
             }
         }
 
+        async function ambilMasterAnggaranTerbaru() {
+            try {
+                const { collection, getDocs } = window.fs;
+                const querySnapshot = await getDocs(collection(window.db, "pengaturan_anggaran"));
+                cachedMasterAnggaran = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    cachedMasterAnggaran[data.id_sub] = data;
+                });
+            } catch (error) {
+                console.error("Error loading anggaran:", error);
+            }
+        }
+
         async function updateMasterAnggaran(id, tahun, val) {
             try {
                 const { doc, setDoc } = window.fs;
@@ -1525,6 +1544,9 @@
                 
                 await setDoc(docRef, dataToSave);
                 showToast('Pagu Anggaran berhasil diupdate ke server');
+                
+                // Update cache lokal
+                cachedMasterAnggaran[id] = dataToSave;
             } catch (error) {
                 console.error("Error saving anggaran:", error);
                 showToast('Gagal menyimpan Pagu Anggaran', 'error');
@@ -1554,18 +1576,18 @@
             if (!id) { div.innerHTML = '<em>Silakan pilih sub kegiatan</em>'; return; }
             if (!tahun) { div.innerHTML = '<em style="color:red">Silakan pilih Tahun terlebih dahulu di atas!</em>'; return; }
 
-            // Pastikan master anggaran sudah di-load
-            if (Object.keys(cachedMasterAnggaran).length === 0) {
-                const { collection, getDocs } = window.fs;
-                const querySnapshot = await getDocs(collection(window.db, "pengaturan_anggaran"));
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    cachedMasterAnggaran[data.id_sub] = data;
-                });
-            }
+            div.innerHTML = '<em>Memuat data Pagu...</em>';
 
-            const nominal = cachedMasterAnggaran[id] && cachedMasterAnggaran[id][tahun] ? cachedMasterAnggaran[id][tahun] : 0;
-            div.innerHTML = `<strong>Jumlah Anggaran (Pagu) Tahun ${tahun}:</strong> Rp ${formatRupiah(nominal)}`;
+            try {
+                // Ambil data terbaru langsung dari Firebase
+                await ambilMasterAnggaranTerbaru();
+
+                const nominal = cachedMasterAnggaran[id] && cachedMasterAnggaran[id][tahun] ? cachedMasterAnggaran[id][tahun] : 0;
+                div.innerHTML = `<strong>Jumlah Anggaran (Pagu) Tahun ${tahun}:</strong> Rp ${formatRupiah(nominal)}`;
+            } catch (error) {
+                console.error("Error loading anggaran detail:", error);
+                div.innerHTML = '<em style="color:red">Gagal memuat data Pagu.</em>';
+            }
         }
 
         async function submitAnggaran(e) {
@@ -1645,13 +1667,8 @@
             try {
                 const { collection, getDocs, query, where } = window.fs;
 
-                if (Object.keys(cachedMasterAnggaran).length === 0) {
-                    const qMaster = await getDocs(collection(window.db, "pengaturan_anggaran"));
-                    qMaster.forEach((doc) => {
-                        const data = doc.data();
-                        cachedMasterAnggaran[data.id_sub] = data;
-                    });
-                }
+                // Ambil data terbaru
+                await ambilMasterAnggaranTerbaru();
 
                 const qRealisasi = query(collection(window.db, "realisasi_anggaran"), 
                     where("tahun", "==", tahunAktif), 
