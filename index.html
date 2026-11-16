@@ -844,7 +844,6 @@
         const AKUN = { username: 'disnaker', password: 'banjarnegara2026', nama: 'Admin' };
         let activeLevel = 'Tujuan'; 
         let activePage = 'dashboard';
-        let cachedCapaianData = []; 
         let cachedTargetTW = {}; 
         let cachedMasterAnggaran = {}; 
 
@@ -968,6 +967,7 @@
             document.getElementById('namaUser').textContent = user.nama;
             
             populateTahunCapaian();
+            populateSubKegiatanDropdown(); 
             switchLevel('Tujuan'); 
             
             switchPage('dashboard');
@@ -983,10 +983,6 @@
             document.getElementById('pageDashboard').style.display = page === 'dashboard' ? 'flex' : 'none';
             document.getElementById('pageCapaian').style.display = page === 'capaian' ? 'block' : 'none';
             document.getElementById('pageAnggaran').style.display = page === 'anggaran' ? 'block' : 'none';
-
-            if (page === 'anggaran') {
-                populateSubKegiatanDropdown(); 
-            }
 
             const titles = {
                 'dashboard': 'Dashboard SIMAKER',
@@ -1042,7 +1038,7 @@
         }
 
         // ================================================================
-        //  MODUL CAPAIAN KINERJA (FIREBASE VERSION)
+        //  MODUL CAPAIAN KINERJA
         // ================================================================
         function populateTahunCapaian() {
             const sel = document.getElementById('capaianTahun');
@@ -1080,9 +1076,7 @@
                 
                 document.getElementById('tableCapaian').innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Memuat data...</h3></div></td></tr>`;
                 
-                // Ambil data target terbaru langsung dari server saat ganti level
                 await ambilTargetTerbaru();
-
                 await renderCapaian();
             }
         }
@@ -1156,7 +1150,6 @@
                 await setDoc(docRef, dataToSave);
                 showToast('Target TW berhasil diupdate ke server');
                 
-                // Update cache lokal agar form langsung berubah
                 cachedTargetTW[id] = dataToSave;
             } catch (error) {
                 console.error("Error saving target:", error);
@@ -1469,7 +1462,7 @@
         }
 
         // ================================================================
-        //  MODUL REALISASI ANGGARAN (FIREBASE VERSION)
+        //  MODUL REALISASI ANGGARAN
         // ================================================================
         function switchMenuAnggaran(menu) {
             document.querySelectorAll('#navMenuAnggaran button').forEach(btn => {
@@ -1497,7 +1490,13 @@
                 MASTER_HIERARKI.forEach(p => {
                     p.children.forEach(k => {
                         k.children.forEach(s => {
-                            const val = cachedMasterAnggaran[s.id] && cachedMasterAnggaran[s.id][tahun] ? cachedMasterAnggaran[s.id][tahun] : (s.anggaran2026 || '');
+                            let val = '';
+                            if (cachedMasterAnggaran[s.id] && cachedMasterAnggaran[s.id][tahun] !== undefined) {
+                                val = cachedMasterAnggaran[s.id][tahun];
+                            } else {
+                                val = s.anggaran2026 !== undefined ? s.anggaran2026 : 0;
+                            }
+
                             html += `
                                 <tr>
                                     <td class="text-left"><span style="font-size:11px; color:#64748b;">${s.kode}</span><br>${s.nama}</td>
@@ -1521,7 +1520,9 @@
                 cachedMasterAnggaran = {};
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    cachedMasterAnggaran[data.id_sub] = data;
+                    if (data.id_sub) {
+                        cachedMasterAnggaran[data.id_sub] = data;
+                    }
                 });
             } catch (error) {
                 console.error("Error loading anggaran:", error);
@@ -1545,7 +1546,6 @@
                 await setDoc(docRef, dataToSave);
                 showToast('Pagu Anggaran berhasil diupdate ke server');
                 
-                // Update cache lokal
                 cachedMasterAnggaran[id] = dataToSave;
             } catch (error) {
                 console.error("Error saving anggaran:", error);
@@ -1579,7 +1579,6 @@
             div.innerHTML = '<em>Memuat data Pagu...</em>';
 
             try {
-                // Ambil data terbaru langsung dari Firebase
                 await ambilMasterAnggaranTerbaru();
 
                 const nominal = cachedMasterAnggaran[id] && cachedMasterAnggaran[id][tahun] ? cachedMasterAnggaran[id][tahun] : 0;
@@ -1667,7 +1666,6 @@
             try {
                 const { collection, getDocs, query, where } = window.fs;
 
-                // Ambil data terbaru
                 await ambilMasterAnggaranTerbaru();
 
                 const qRealisasi = query(collection(window.db, "realisasi_anggaran"), 
