@@ -974,7 +974,7 @@
             switchPage('dashboard');
         }
 
-        function switchPage(page) {
+              function switchPage(page) {
             activePage = page;
             
             document.getElementById('navDashboard').classList.toggle('active', page === 'dashboard');
@@ -985,7 +985,12 @@
             document.getElementById('pageCapaian').style.display = page === 'capaian' ? 'block' : 'none';
             document.getElementById('pageAnggaran').style.display = page === 'anggaran' ? 'block' : 'none';
 
-            const titles = {
+            // TAMBAHKAN BARIS INI
+            if (page === 'anggaran') {
+                populateSubKegiatanDropdown(); 
+            }
+
+            const titles = { /* ... */ };
                 'dashboard': 'Dashboard SIMAKER',
                 'capaian': 'Modul Capaian Kinerja',
                 'anggaran': 'Modul Realisasi Anggaran'
