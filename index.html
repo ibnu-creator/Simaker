@@ -14,6 +14,28 @@
     <!-- FontAwesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- FIREBASE SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNPcCx0P1j_-3joBGp7BLCUdhA4Y1PKY0",
+            authDomain: "simaker-disnaker.firebaseapp.com",
+            projectId: "simaker-disnaker",
+            storageBucket: "simaker-disnaker.firebasestorage.app",
+            messagingSenderId: "842883635380",
+            appId: "1:842883635380:web:fabe63744845b4ff7ddfe1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Ekspos fungsi Firebase ke global window agar bisa dipakai di script biasa
+        window.db = db;
+        window.fs = { collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc, setDoc, getDoc };
+    </script>
+
     <style>
         /* ============================================================
            RESET & GLOBAL
@@ -182,7 +204,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            opacity: 0.3; /* Transparansi batik (0.3 = 30% terlihat) */
+            opacity: 0.15; 
             z-index: 0;
             pointer-events: none;
         }
@@ -195,7 +217,7 @@
             align-items: center;
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
             z-index: 5;
-            position: relative; /* Agar di atas background batik */
+            position: relative;
         }
         
         .top-header h1 {
@@ -211,7 +233,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 28px 32px;
-            position: relative; /* Agar di atas background batik */
+            position: relative;
             z-index: 1;
         }
 
@@ -225,7 +247,7 @@
         }
         
         .dashboard-card {
-            background: rgba(255, 255, 255, 0.95); /* Sedikit transparan agar menyatu dengan batik */
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(4px);
             border-radius: 14px;
             padding: 32px;
@@ -265,7 +287,7 @@
         .page-content { display: none; }
         
         .card {
-            background: rgba(255, 255, 255, 0.95); /* Sedikit transparan */
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(4px);
             border-radius: 14px; padding: 24px; 
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
@@ -323,7 +345,7 @@
         thead { background: #f1f5f9; }
         th { text-align: center; padding: 10px 8px; font-weight: 700; color: #1e293b; border-bottom: 2px solid #d1d9e6; border-right: 1px solid #e9edf2; white-space: nowrap; }
         th:last-child { border-right: none; }
-        td { padding: 10px 8px; border-bottom: 1px solid #e9edf2; border-right: 1px solid #e9edf2; vertical-align: middle; text-align: right; background: rgba(255,255,255,0.6); }
+        td { padding: 10px 8px; border-bottom: 1px solid #e9edf2; border-right: 1px solid #e9edf2; vertical-align: middle; text-align: right; background: #ffffff; }
         td:last-child { border-right: none; }
         td.text-left { text-align: left; }
         td.text-center { text-align: center; }
@@ -332,7 +354,7 @@
         .text-long { max-width: 200px; white-space: pre-wrap; word-wrap: break-word; font-size: 12px; text-align: left; }
         .row-program td { background: #e2e8f0; font-weight: bold; }
         .row-kegiatan td { background: #f8fafc; font-weight: bold; }
-        .row-sub td { background: rgba(255,255,255,0.8); }
+        .row-sub td { background: #ffffff; }
 
         .badge-logika { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; color: white; }
         .bg-kumulatif { background: #3b82f6; }
@@ -536,7 +558,7 @@
                                         </div>
                                         <div class="form-group full-width" style="justify-content:flex-end;">
                                             <div class="form-actions">
-                                                <button type="submit" class="btn btn-success">Simpan Data</button>
+                                                <button type="submit" class="btn btn-success" id="btnSimpanCapaian">Simpan Data</button>
                                                 <button type="reset" class="btn btn-warning">Reset Form</button>
                                             </div>
                                         </div>
@@ -572,7 +594,7 @@
                                             </tr>
                                         </thead>
                                         <tbody id="tableCapaian">
-                                            <tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Belum ada data</h3></div></td></tr>
+                                            <tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Memuat data dari server...</h3></div></td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -620,7 +642,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabelTargetTW">
-                                        <!-- Diisi oleh JS -->
+                                        <tr><td colspan="5" class="text-center">Memuat data...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -702,7 +724,7 @@
                                     </div>
                                     <div class="form-group full-width" style="justify-content:flex-end; margin-top: 16px;">
                                         <div class="form-actions">
-                                            <button type="submit" class="btn btn-success">Simpan Data</button>
+                                            <button type="submit" class="btn btn-success" id="btnSimpanAnggaran">Simpan Data</button>
                                             <button type="reset" class="btn btn-warning">Reset Form</button>
                                         </div>
                                     </div>
@@ -771,7 +793,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabelRekap">
-                                        <!-- Diisi oleh JS -->
+                                        <tr><td colspan="13" class="text-center">Memuat data...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -802,7 +824,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="tabelMaster">
-                                        <!-- Diisi oleh JS -->
+                                        <tr><td colspan="2" class="text-center">Memuat data...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -823,6 +845,9 @@
         const AKUN = { username: 'disnaker', password: 'banjarnegara2026', nama: 'Admin' };
         let activeLevel = 'Tujuan'; 
         let activePage = 'dashboard';
+        let cachedCapaianData = []; 
+        let cachedTargetTW = {}; 
+        let cachedMasterAnggaran = {}; // Cache untuk Pagu
 
         // ================================================================
         //  DATA MASTER CAPAIAN KINERJA
@@ -902,79 +927,7 @@
         ];
 
         // ================================================================
-        //  STORAGE
-        // ================================================================
-        function loadDataCapaian() { const stored = localStorage.getItem('simaker_capaian'); return stored ? JSON.parse(stored) : []; }
-        function saveDataCapaian(data) { localStorage.setItem('simaker_capaian', JSON.stringify(data)); }
-
-        function loadMasterAnggaran() {
-            const stored = localStorage.getItem('simaker_master_anggaran');
-            let data = stored ? JSON.parse(stored) : {};
-            if (Object.keys(data).length === 0) {
-                MASTER_HIERARKI.forEach(p => { p.children.forEach(k => { k.children.forEach(s => { data[s.id] = { 2026: s.anggaran2026 || 0 }; }); }); });
-                saveMasterAnggaran(data);
-            }
-            return data;
-        }
-        function saveMasterAnggaran(data) { localStorage.setItem('simaker_master_anggaran', JSON.stringify(data)); }
-        function loadRealisasi() { const stored = localStorage.getItem('simaker_realisasi_anggaran'); return stored ? JSON.parse(stored) : []; }
-        function saveRealisasi(data) { localStorage.setItem('simaker_realisasi_anggaran', JSON.stringify(data)); }
-
-        function loadTargetTW() { const stored = localStorage.getItem('simaker_target_tw'); return stored ? JSON.parse(stored) : {}; }
-        function saveTargetTW(data) { localStorage.setItem('simaker_target_tw', JSON.stringify(data)); }
-
-        // ================================================================
-        //  HELPER
-        // ================================================================
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            t.textContent = msg; t.className = 'toast ' + type;
-            setTimeout(() => t.classList.add('show'), 50);
-            clearTimeout(t._hide);
-            t._hide = setTimeout(() => t.classList.remove('show'), 3000);
-        }
-
-        function formatAngka(num, satuan) {
-            if (num === undefined || num === null || !isFinite(num)) return '-';
-            let str = Number(num).toLocaleString('id-ID', { maximumFractionDigits: 2 });
-            if (satuan === '%') return str + '%';
-            return str;
-        }
-        function formatRupiah(num) { if (!num && num !== 0) return '0'; return Number(num).toLocaleString('id-ID'); }
-        function formatPersen(num) { if (num === undefined || num === null || !isFinite(num)) return '0.00%'; return Number(num).toFixed(2) + '%'; }
-        function formatTanggal(ts) {
-            const d = new Date(ts); const pad = n => String(n).padStart(2, '0');
-            return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        }
-
-        function downloadFile(content, filename, mimeType = 'text/csv') {
-            const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function togglePassword() {
-            const passInput = document.getElementById('loginPassword');
-            const icon = document.getElementById('togglePassword');
-            if (passInput.type === 'password') {
-                passInput.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                passInput.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            }
-        }
-
-        // ================================================================
-        //  NAVIGASI & INIT
+        //  LOGIN & NAVIGASI
         // ================================================================
         function cekLogin() {
             const session = sessionStorage.getItem('simaker_login');
@@ -1016,12 +969,8 @@
             document.getElementById('namaUser').textContent = user.nama;
             
             populateTahunCapaian();
-            switchLevel('Tujuan');
+            switchLevel('Tujuan'); 
             
-            document.getElementById('anggaranTahun').value = '2026';
-            populateSubKegiatanDropdown();
-            renderMasterAnggaran();
-
             switchPage('dashboard');
         }
 
@@ -1045,7 +994,52 @@
         }
 
         // ================================================================
-        //  MODUL CAPAIAN KINERJA
+        //  HELPER
+        // ================================================================
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.className = 'toast ' + type;
+            setTimeout(() => t.classList.add('show'), 50);
+            clearTimeout(t._hide);
+            t._hide = setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function formatAngka(num, satuan) {
+            if (num === undefined || num === null || !isFinite(num)) return '-';
+            let str = Number(num).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+            if (satuan === '%') return str + '%';
+            return str;
+        }
+        function formatRupiah(num) { if (!num && num !== 0) return '0'; return Number(num).toLocaleString('id-ID'); }
+        function formatPersen(num) { if (num === undefined || num === null || !isFinite(num)) return '0.00%'; return Number(num).toFixed(2) + '%'; }
+        function formatTanggal(ts) {
+            const d = new Date(ts); const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+        function togglePassword() {
+            const passInput = document.getElementById('loginPassword');
+            const icon = document.getElementById('togglePassword');
+            if (passInput.type === 'password') {
+                passInput.type = 'text'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
+            } else {
+                passInput.type = 'password'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
+            }
+        }
+
+        function downloadFile(content, filename, mimeType = 'text/csv') {
+            const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ================================================================
+        //  MODUL CAPAIAN KINERJA (FIREBASE VERSION)
         // ================================================================
         function populateTahunCapaian() {
             const sel = document.getElementById('capaianTahun');
@@ -1057,7 +1051,7 @@
             }
         }
 
-        function switchLevel(level) {
+        async function switchLevel(level) {
             activeLevel = level;
             
             document.querySelectorAll('#navMenuCapaian button').forEach(btn => {
@@ -1068,7 +1062,7 @@
             if (level === 'Pengaturan Target') {
                 document.getElementById('tampilanCapaianNormal').style.display = 'none';
                 document.getElementById('tampilanCapaianTarget').style.display = 'block';
-                renderTargetTW();
+                await renderTargetTW();
             } else {
                 document.getElementById('tampilanCapaianNormal').style.display = 'block';
                 document.getElementById('tampilanCapaianTarget').style.display = 'none';
@@ -1080,47 +1074,78 @@
                 populateCapaianDropdown(level);
                 document.getElementById('formCapaian').reset();
                 document.getElementById('detailCapaian').innerHTML = '<em>Silakan pilih indikator terlebih dahulu</em>';
-                renderCapaian();
+                
+                document.getElementById('tableCapaian').innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Memuat data...</h3></div></td></tr>`;
+                
+                await renderCapaian();
             }
         }
 
-        function renderTargetTW() {
+        async function renderTargetTW() {
             const tahun = document.getElementById('tahunTargetTW').value;
             const level = document.getElementById('levelTargetTW').value;
-            const targetData = loadTargetTW();
             const tbody = document.getElementById('tabelTargetTW');
-            let html = '';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat data...</td></tr>';
+            
+            try {
+                const { collection, getDocs } = window.fs;
+                const querySnapshot = await getDocs(collection(window.db, "pengaturan_target_tw"));
+                
+                cachedTargetTW = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    cachedTargetTW[data.id_indikator] = data;
+                });
 
-            MASTER_CAPAIAN.forEach(item => {
-                if (item.level === level) {
-                    const t = targetData[item.id] ? targetData[item.id][tahun] : {};
-                    const tw1 = t ? (t.tw1 || '') : '';
-                    const tw2 = t ? (t.tw2 || '') : '';
-                    const tw3 = t ? (t.tw3 || '') : '';
-                    const tw4 = t ? (t.tw4 || '') : '';
+                let html = '';
+                MASTER_CAPAIAN.forEach(item => {
+                    if (item.level === level) {
+                        const t = cachedTargetTW[item.id] && cachedTargetTW[item.id][tahun] ? cachedTargetTW[item.id][tahun] : {};
+                        const tw1 = t ? (t.tw1 || '') : '';
+                        const tw2 = t ? (t.tw2 || '') : '';
+                        const tw3 = t ? (t.tw3 || '') : '';
+                        const tw4 = t ? (t.tw4 || '') : '';
 
-                    html += `
-                        <tr>
-                            <td class="text-left">${item.indikator}</td>
-                            <td><input type="number" value="${tw1}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw1', this.value)"></td>
-                            <td><input type="number" value="${tw2}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw2', this.value)"></td>
-                            <td><input type="number" value="${tw3}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw3', this.value)"></td>
-                            <td><input type="number" value="${tw4}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw4', this.value)"></td>
-                        </tr>
-                    `;
-                }
-            });
-            tbody.innerHTML = html;
+                        html += `
+                            <tr>
+                                <td class="text-left">${item.indikator}</td>
+                                <td><input type="number" value="${tw1}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw1', this.value)"></td>
+                                <td><input type="number" value="${tw2}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw2', this.value)"></td>
+                                <td><input type="number" value="${tw3}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw3', this.value)"></td>
+                                <td><input type="number" value="${tw4}" placeholder="0" style="text-align:right; width:80px;" onchange="updateTargetTW('${item.id}', '${tahun}', 'tw4', this.value)"></td>
+                            </tr>
+                        `;
+                    }
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading target:", error);
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data.</td></tr>';
+            }
         }
 
-        function updateTargetTW(id, tahun, twKey, val) {
-            const targetData = loadTargetTW();
-            if (!targetData[id]) targetData[id] = {};
-            if (!targetData[id][tahun]) targetData[id][tahun] = { tw1: 0, tw2: 0, tw3: 0, tw4: 0 };
-            
-            targetData[id][tahun][twKey] = parseFloat(val) || 0;
-            saveTargetTW(targetData);
-            showToast('Target TW berhasil diupdate');
+        async function updateTargetTW(id, tahun, twKey, val) {
+            try {
+                const { doc, setDoc } = window.fs;
+                const docRef = doc(window.db, "pengaturan_target_tw", id);
+                
+                const docSnap = await window.fs.getDoc(docRef);
+                let dataToSave = { id_indikator: id };
+
+                if (docSnap.exists()) {
+                    dataToSave = docSnap.data();
+                }
+
+                if (!dataToSave[tahun]) dataToSave[tahun] = { tw1: 0, tw2: 0, tw3: 0, tw4: 0 };
+                
+                dataToSave[tahun][twKey] = parseFloat(val) || 0;
+                
+                await setDoc(docRef, dataToSave);
+                showToast('Target TW berhasil diupdate ke server');
+            } catch (error) {
+                console.error("Error saving target:", error);
+                showToast('Gagal menyimpan Target TW', 'error');
+            }
         }
 
         function populateCapaianDropdown(level) {
@@ -1155,15 +1180,14 @@
 
             let infoTW = '<em style="color:red">Pilih Tahun & Triwulan Berjalan di atas</em>';
             if (tahun && twBerjalan) {
-                const targetData = loadTargetTW();
-                if (targetData[id] && targetData[id][tahun]) {
+                if (cachedTargetTW[id] && cachedTargetTW[id][tahun]) {
                     let twKey = '';
                     if (twBerjalan === 'Triwulan I') twKey = 'tw1';
                     else if (twBerjalan === 'Triwulan II') twKey = 'tw2';
                     else if (twBerjalan === 'Triwulan III') twKey = 'tw3';
                     else if (twBerjalan === 'Triwulan IV') twKey = 'tw4';
 
-                    const valTW = targetData[id][tahun][twKey];
+                    const valTW = cachedTargetTW[id][tahun][twKey];
                     if (valTW !== undefined) {
                         infoTW = formatAngka(valTW, item.satuan);
                     }
@@ -1184,8 +1208,11 @@
         document.getElementById('capaianPeriode').addEventListener('change', tampilkanDetailCapaian);
         document.getElementById('capaianTahun').addEventListener('change', tampilkanDetailCapaian);
 
-        function submitCapaian(e) {
+        async function submitCapaian(e) {
             e.preventDefault();
+            const btnSimpan = document.getElementById('btnSimpanCapaian');
+            const originalBtnText = btnSimpan.innerHTML;
+            
             const tahun = document.getElementById('capaianTahun').value;
             const twBerjalan = document.getElementById('capaianPeriode').value;
             const indikatorId = document.getElementById('capaianIndikator').value;
@@ -1208,15 +1235,14 @@
             const targetTahunan = master.targetTahun[tahun];
             if (targetTahunan === undefined) { showToast('Target tahun ini tidak tersedia!', 'error'); return; }
 
-            const targetData = loadTargetTW();
             let targetSdTw = 0;
-            if (targetData[indikatorId] && targetData[indikatorId][tahun]) {
+            if (cachedTargetTW[indikatorId] && cachedTargetTW[indikatorId][tahun]) {
                 let twKey = '';
                 if (twBerjalan === 'Triwulan I') twKey = 'tw1';
                 else if (twBerjalan === 'Triwulan II') twKey = 'tw2';
                 else if (twBerjalan === 'Triwulan III') twKey = 'tw3';
                 else if (twBerjalan === 'Triwulan IV') twKey = 'tw4';
-                targetSdTw = targetData[indikatorId][tahun][twKey] || 0;
+                targetSdTw = cachedTargetTW[indikatorId][tahun][twKey] || 0;
             }
             
             if (targetSdTw <= 0) {
@@ -1240,102 +1266,194 @@
             const persenTW = targetSdTw > 0 ? (totalRealisasi / targetSdTw) * 100 : 0;
             const persenTahunan = targetTahunan > 0 ? (totalRealisasi / targetTahunan) * 100 : 0;
 
-            const data = loadDataCapaian();
-            data.push({
-                id: Date.now(), tanggal: new Date().toISOString(), tahun, twBerjalan,
-                indikatorId: master.id, level: master.level, nama: master.nama, indikator: master.indikator,
-                tipe: master.tipe, satuan: master.satuan, targetTahun: targetTahunan, targetSdTw,
-                tw1, tw2, tw3, tw4, totalRealisasi, persenTW, persenTahunan, pendukung, penghambat
-            });
-            saveDataCapaian(data);
+            btnSimpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            btnSimpan.disabled = true;
 
-            renderCapaian();
-            document.getElementById('formCapaian').reset();
-            document.getElementById('detailCapaian').innerHTML = '<em>Silakan pilih indikator terlebih dahulu</em>';
-            showToast('Data berhasil disimpan!');
+            try {
+                const { collection, addDoc } = window.fs;
+                await addDoc(collection(window.db, "capaian_kinerja"), {
+                    tanggal: new Date().toISOString(), 
+                    tahun: tahun, 
+                    twBerjalan: twBerjalan,
+                    indikatorId: master.id, 
+                    level: master.level, 
+                    nama: master.nama, 
+                    indikator: master.indikator,
+                    tipe: master.tipe, 
+                    satuan: master.satuan, 
+                    targetTahun: targetTahunan, 
+                    targetSdTw: targetSdTw,
+                    tw1: tw1, 
+                    tw2: tw2, 
+                    tw3: tw3, 
+                    tw4: tw4, 
+                    totalRealisasi: totalRealisasi, 
+                    persenTW: persenTW, 
+                    persenTahunan: persenTahunan, 
+                    pendukung: pendukung, 
+                    penghambat: penghambat
+                });
+
+                showToast('Data berhasil disimpan ke server!');
+                document.getElementById('formCapaian').reset();
+                document.getElementById('detailCapaian').innerHTML = '<em>Silakan pilih indikator terlebih dahulu</em>';
+                
+                await renderCapaian();
+            } catch (error) {
+                console.error("Error saving data:", error);
+                showToast('Gagal menyimpan data ke server.', 'error');
+            } finally {
+                btnSimpan.innerHTML = originalBtnText;
+                btnSimpan.disabled = false;
+            }
         }
 
-        function renderCapaian() {
-            const dataRaw = loadDataCapaian();
-            const data = dataRaw.filter(d => d.level === activeLevel);
+        async function renderCapaian() {
             const tbody = document.getElementById('tableCapaian');
             const total = document.getElementById('totalCapaian');
-            total.textContent = data.length + ' data';
 
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Belum ada data</h3></div></td></tr>`;
-                return;
-            }
-
-            let html = '';
-            const sorted = [...data].reverse();
-            sorted.forEach((item, idx) => {
-                const no = data.length - idx;
-                const badgeClass = item.tipe === 'Kumulatif' ? 'bg-kumulatif' : 'bg-flat';
-                const badgeText = item.tipe === 'Kumulatif' ? 'Kumulatif' : 'Flat';
+            try {
+                const { collection, getDocs, query, where } = window.fs;
+                const q = query(collection(window.db, "capaian_kinerja"), where("level", "==", activeLevel));
+                const querySnapshot = await getDocs(q);
                 
-                const pendukung = item.pendukung ? item.pendukung : '-';
-                const penghambat = item.penghambat ? item.penghambat : '-';
+                let data = [];
+                querySnapshot.forEach((doc) => {
+                    data.push({ firebaseId: doc.id, ...doc.data() });
+                });
 
-                html += `
-                    <tr>
-                        <td class="text-center">${no}</td>
-                        <td class="text-center">${formatTanggal(item.tanggal)}</td>
-                        <td class="text-left" style="min-width: 200px;"><strong>${item.nama}</strong></td>
-                        <td class="text-left" style="min-width: 200px;">${item.indikator} <br><span class="badge-logika ${badgeClass}">${badgeText}</span> <small style="color:#64748b">(${item.twBerjalan})</small></td>
-                        <td>${formatAngka(item.targetTahun, item.satuan)}</td>
-                        <td>${formatAngka(item.targetSdTw, item.satuan)}</td>
-                        <td>${item.tw1 ? formatAngka(item.tw1, item.satuan) : '-'}</td>
-                        <td>${item.tw2 ? formatAngka(item.tw2, item.satuan) : '-'}</td>
-                        <td>${item.tw3 ? formatAngka(item.tw3, item.satuan) : '-'}</td>
-                        <td>${item.tw4 ? formatAngka(item.tw4, item.satuan) : '-'}</td>
-                        <td><strong>${formatAngka(item.totalRealisasi, item.satuan)}</strong></td>
-                        <td><strong>${formatAngka(item.persenTW, '%')}</strong></td>
-                        <td><strong>${formatAngka(item.persenTahunan, '%')}</strong></td>
-                        <td class="text-long">${pendukung}</td>
-                        <td class="text-long">${penghambat}</td>
-                        <td class="text-center"><button class="btn btn-danger btn-sm" onclick="hapusCapaian(${item.id})">Hapus</button></td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        }
+                data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-        function hapusCapaian(id) {
-            if (!confirm('Yakin ingin menghapus data ini?')) return;
-            let data = loadDataCapaian();
-            data = data.filter(d => d.id !== id);
-            saveDataCapaian(data);
-            renderCapaian();
-            showToast('Data dihapus!');
-        }
+                total.textContent = data.length + ' data';
 
-        function hapusSemuaCapaian() {
-            if (!confirm('Hapus SEMUA data capaian? Tindakan ini tidak bisa dibatalkan!')) return;
-            saveDataCapaian([]);
-            renderCapaian();
-            showToast('Semua data capaian dihapus.', 'error');
-        }
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Belum ada data</h3></div></td></tr>`;
+                    return;
+                }
 
-        function exportCapaian() {
-            const dataRaw = loadDataCapaian();
-            const data = dataRaw.filter(d => d.level === activeLevel);
-            if (data.length === 0) {
-                showToast('Tidak ada data untuk diexport.', 'error');
-                return;
+                let html = '';
+                data.forEach((item, idx) => {
+                    const no = idx + 1;
+                    const badgeClass = item.tipe === 'Kumulatif' ? 'bg-kumulatif' : 'bg-flat';
+                    const badgeText = item.tipe === 'Kumulatif' ? 'Kumulatif' : 'Flat';
+                    
+                    const pendukung = item.pendukung ? item.pendukung : '-';
+                    const penghambat = item.penghambat ? item.penghambat : '-';
+
+                    html += `
+                        <tr>
+                            <td class="text-center">${no}</td>
+                            <td class="text-center">${formatTanggal(item.tanggal)}</td>
+                            <td class="text-left" style="min-width: 200px;"><strong>${item.nama}</strong></td>
+                            <td class="text-left" style="min-width: 200px;">${item.indikator} <br><span class="badge-logika ${badgeClass}">${badgeText}</span> <small style="color:#64748b">(${item.twBerjalan})</small></td>
+                            <td>${formatAngka(item.targetTahun, item.satuan)}</td>
+                            <td>${formatAngka(item.targetSdTw, item.satuan)}</td>
+                            <td>${item.tw1 ? formatAngka(item.tw1, item.satuan) : '-'}</td>
+                            <td>${item.tw2 ? formatAngka(item.tw2, item.satuan) : '-'}</td>
+                            <td>${item.tw3 ? formatAngka(item.tw3, item.satuan) : '-'}</td>
+                            <td>${item.tw4 ? formatAngka(item.tw4, item.satuan) : '-'}</td>
+                            <td><strong>${formatAngka(item.totalRealisasi, item.satuan)}</strong></td>
+                            <td><strong>${formatAngka(item.persenTW, '%')}</strong></td>
+                            <td><strong>${formatAngka(item.persenTahunan, '%')}</strong></td>
+                            <td class="text-long">${pendukung}</td>
+                            <td class="text-long">${penghambat}</td>
+                            <td class="text-center"><button class="btn btn-danger btn-sm" onclick="hapusCapaian('${item.firebaseId}')">Hapus</button></td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading history:", error);
+                tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="icon">-</div><h3>Gagal memuat data dari server.</h3></div></td></tr>`;
             }
-            let csv = `No,Tanggal,Nama ${activeLevel},Indikator,Target Tahun,Target s.d TW,TW I,TW II,TW III,TW IV,Total,% TW,% Tahunan,Faktor Pendukung,Faktor Penghambat\n`;
-            data.forEach((d, i) => {
-                const pendukung = (d.pendukung || '').replace(/"/g, '""');
-                const penghambat = (d.penghambat || '').replace(/"/g, '""');
-                csv += `${i+1},"${formatTanggal(d.tanggal)}","${d.nama}","${d.indikator}",${d.targetTahun},${d.targetSdTw},${d.tw1},${d.tw2},${d.tw3},${d.tw4},${d.totalRealisasi},${d.persenTW.toFixed(2)}%,${d.persenTahunan.toFixed(2)}%,"${pendukung}","${penghambat}"\n`;
-            });
-            downloadFile(csv, `capaian_${activeLevel}.csv`, 'text/csv');
-            showToast('Data diexport!');
+        }
+
+        async function hapusCapaian(firebaseId) {
+            if (!confirm('Yakin ingin menghapus data ini dari server?')) return;
+            try {
+                const { doc, deleteDoc } = window.fs;
+                await deleteDoc(doc(window.db, "capaian_kinerja", firebaseId));
+                showToast('Data dihapus dari server!');
+                await renderCapaian();
+            } catch (error) {
+                console.error("Error deleting:", error);
+                showToast('Gagal menghapus data.', 'error');
+            }
+        }
+
+        async function hapusSemuaCapaian() {
+            if (!confirm('Hapus SEMUA data capaian di level ini? Tindakan ini tidak bisa dibatalkan!')) return;
+            
+            try {
+                const { collection, getDocs, query, where, doc, deleteDoc } = window.fs;
+                const q = query(collection(window.db, "capaian_kinerja"), where("level", "==", activeLevel));
+                const querySnapshot = await getDocs(q);
+                
+                if(querySnapshot.empty) {
+                    showToast('Tidak ada data untuk dihapus.', 'error');
+                    return;
+                }
+
+                const promises = [];
+                querySnapshot.forEach((document) => {
+                    promises.push(deleteDoc(doc(window.db, "capaian_kinerja", document.id)));
+                });
+                
+                await Promise.all(promises);
+                showToast('Semua data berhasil dihapus.', 'success');
+                await renderCapaian();
+            } catch (error) {
+                console.error("Error deleting all:", error);
+                showToast('Gagal menghapus semua data.', 'error');
+            }
+        }
+
+        async function exportCapaian() {
+            const btnExport = document.querySelector('button[onclick="exportCapaian()"]');
+            const originalText = btnExport.innerHTML;
+            btnExport.innerHTML = 'Memproses...';
+            btnExport.disabled = true;
+
+            try {
+                const { collection, getDocs, query, where } = window.fs;
+                const q = query(collection(window.db, "capaian_kinerja"), where("level", "==", activeLevel));
+                const querySnapshot = await getDocs(q);
+                
+                let data = [];
+                querySnapshot.forEach((doc) => {
+                    data.push(doc.data());
+                });
+
+                if (data.length === 0) {
+                    showToast('Tidak ada data untuk diexport.', 'error');
+                    return;
+                }
+
+                data.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+                let csv = `No,Tanggal,Nama ${activeLevel},Indikator,Target Tahun,Target s.d TW,TW I,TW II,TW III,TW IV,Total,% TW,% Tahunan,Faktor Pendukung,Faktor Penghambat\n`;
+                
+                data.forEach((d, i) => {
+                    const pendukung = (d.pendukung || '').replace(/"/g, '""');
+                    const penghambat = (d.penghambat || '').replace(/"/g, '""');
+                    const tgl = formatTanggal(d.tanggal);
+                    
+                    csv += `${i+1},"${tgl}","${d.nama}","${d.indikator}",${d.targetTahun},${d.targetSdTw},${d.tw1},${d.tw2},${d.tw3},${d.tw4},${d.totalRealisasi},${d.persenTW.toFixed(2)}%,${d.persenTahunan.toFixed(2)}%,"${pendukung}","${penghambat}"\n`;
+                });
+                
+                downloadFile(csv, `capaian_${activeLevel.replace(/\s+/g, '_')}.csv`, 'text/csv');
+                showToast('Data berhasil diexport!');
+            } catch (error) {
+                console.error("Error exporting:", error);
+                showToast('Gagal melakukan export data.', 'error');
+            } finally {
+                btnExport.innerHTML = originalText;
+                btnExport.disabled = false;
+            }
         }
 
         // ================================================================
-        //  MODUL REALISASI ANGGARAN
+        //  MODUL REALISASI ANGGARAN (FIREBASE VERSION)
         // ================================================================
         function switchMenuAnggaran(menu) {
             document.querySelectorAll('#navMenuAnggaran button').forEach(btn => {
@@ -1351,33 +1469,62 @@
             if (menu === 'master') renderMasterAnggaran();
         }
 
-        function renderMasterAnggaran() {
-            const master = loadMasterAnggaran();
+        async function renderMasterAnggaran() {
             const tahun = document.getElementById('tahunMaster').value;
             const tbody = document.getElementById('tabelMaster');
-            let html = '';
-            MASTER_HIERARKI.forEach(p => {
-                p.children.forEach(k => {
-                    k.children.forEach(s => {
-                        const val = master[s.id] ? (master[s.id][tahun] || '') : '';
-                        html += `
-                            <tr>
-                                <td class="text-left"><span style="font-size:11px; color:#64748b;">${s.kode}</span><br>${s.nama}</td>
-                                <td><input type="number" value="${val}" placeholder="0" style="text-align:right; width: 150px;" onchange="updateMasterAnggaran('${s.id}', '${tahun}', this.value)"></td>
-                            </tr>
-                        `;
+            tbody.innerHTML = '<tr><td colspan="2" class="text-center">Memuat data...</td></tr>';
+
+            try {
+                const { collection, getDocs } = window.fs;
+                const querySnapshot = await getDocs(collection(window.db, "pengaturan_anggaran"));
+                
+                cachedMasterAnggaran = {};
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    cachedMasterAnggaran[data.id_sub] = data;
+                });
+
+                let html = '';
+                MASTER_HIERARKI.forEach(p => {
+                    p.children.forEach(k => {
+                        k.children.forEach(s => {
+                            const val = cachedMasterAnggaran[s.id] && cachedMasterAnggaran[s.id][tahun] ? cachedMasterAnggaran[s.id][tahun] : (s.anggaran2026 || '');
+                            html += `
+                                <tr>
+                                    <td class="text-left"><span style="font-size:11px; color:#64748b;">${s.kode}</span><br>${s.nama}</td>
+                                    <td><input type="number" value="${val}" placeholder="0" style="text-align:right; width: 150px;" onchange="updateMasterAnggaran('${s.id}', '${tahun}', this.value)"></td>
+                                </tr>
+                            `;
+                        });
                     });
                 });
-            });
-            tbody.innerHTML = html;
+                tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading anggaran:", error);
+                tbody.innerHTML = '<tr><td colspan="2" class="text-center text-danger">Gagal memuat data.</td></tr>';
+            }
         }
 
-        function updateMasterAnggaran(id, tahun, val) {
-            const master = loadMasterAnggaran();
-            if (!master[id]) master[id] = {};
-            master[id][tahun] = parseFloat(val) || 0;
-            saveMasterAnggaran(master);
-            showToast('Anggaran berhasil diupdate');
+        async function updateMasterAnggaran(id, tahun, val) {
+            try {
+                const { doc, setDoc } = window.fs;
+                const docRef = doc(window.db, "pengaturan_anggaran", id);
+                
+                const docSnap = await window.fs.getDoc(docRef);
+                let dataToSave = { id_sub: id };
+
+                if (docSnap.exists()) {
+                    dataToSave = docSnap.data();
+                }
+
+                dataToSave[tahun] = parseFloat(val) || 0;
+                
+                await setDoc(docRef, dataToSave);
+                showToast('Pagu Anggaran berhasil diupdate ke server');
+            } catch (error) {
+                console.error("Error saving anggaran:", error);
+                showToast('Gagal menyimpan Pagu Anggaran', 'error');
+            }
         }
 
         function populateSubKegiatanDropdown() {
@@ -1395,7 +1542,7 @@
             });
         }
 
-        function tampilkanDetailAnggaran() {
+        async function tampilkanDetailAnggaran() {
             const id = document.getElementById('anggaranSubKegiatan').value;
             const tahun = document.getElementById('anggaranTahun').value;
             const div = document.getElementById('detailAnggaran');
@@ -1403,13 +1550,25 @@
             if (!id) { div.innerHTML = '<em>Silakan pilih sub kegiatan</em>'; return; }
             if (!tahun) { div.innerHTML = '<em style="color:red">Silakan pilih Tahun terlebih dahulu di atas!</em>'; return; }
 
-            const master = loadMasterAnggaran();
-            const nominal = master[id] ? (master[id][tahun] || 0) : 0;
+            // Pastikan master anggaran sudah di-load
+            if (Object.keys(cachedMasterAnggaran).length === 0) {
+                const { collection, getDocs } = window.fs;
+                const querySnapshot = await getDocs(collection(window.db, "pengaturan_anggaran"));
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    cachedMasterAnggaran[data.id_sub] = data;
+                });
+            }
+
+            const nominal = cachedMasterAnggaran[id] && cachedMasterAnggaran[id][tahun] ? cachedMasterAnggaran[id][tahun] : 0;
             div.innerHTML = `<strong>Jumlah Anggaran (Pagu) Tahun ${tahun}:</strong> Rp ${formatRupiah(nominal)}`;
         }
 
-        function submitAnggaran(e) {
+        async function submitAnggaran(e) {
             e.preventDefault();
+            const btnSimpan = document.getElementById('btnSimpanAnggaran');
+            const originalBtnText = btnSimpan.innerHTML;
+            
             const tahun = document.getElementById('anggaranTahun').value;
             const bulan = document.getElementById('anggaranBulan').value;
             const subId = document.getElementById('anggaranSubKegiatan').value;
@@ -1422,136 +1581,216 @@
 
             if (!tahun || !bulan || !subId) { showToast('Harap lengkapi Tahun, Bulan, dan Sub Kegiatan!', 'error'); return; }
 
-            const data = loadRealisasi();
-            const existingIndex = data.findIndex(d => d.tahun === tahun && d.bulan === bulan && d.subId === subId);
-            const newData = { id: Date.now(), tahun, bulan, subId, realisasiLalu, realisasiIni, targetUang, targetFisik, realisasiFisik };
+            btnSimpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            btnSimpan.disabled = true;
 
-            if (existingIndex >= 0) {
-                if(!confirm('Data sudah ada. Timpa dengan data baru?')) return;
-                data[existingIndex] = newData;
-            } else {
-                data.push(newData);
+            try {
+                const { collection, getDocs, query, where, addDoc, doc, updateDoc } = window.fs;
+                
+                // Cek apakah data untuk sub kegiatan & bulan ini sudah ada
+                const q = query(collection(window.db, "realisasi_anggaran"), 
+                    where("tahun", "==", tahun), 
+                    where("bulan", "==", bulan), 
+                    where("subId", "==", subId));
+                
+                const querySnapshot = await getDocs(q);
+                
+                const dataToSave = {
+                    tahun, bulan, subId, 
+                    realisasiLalu, realisasiIni, targetUang, targetFisik, realisasiFisik
+                };
+
+                if (!querySnapshot.empty) {
+                    // Jika sudah ada, timpa (update)
+                    if(!confirm('Data sudah ada. Timpa dengan data baru?')) {
+                        btnSimpan.innerHTML = originalBtnText;
+                        btnSimpan.disabled = false;
+                        return;
+                    }
+                    const docId = querySnapshot.docs[0].id;
+                    await updateDoc(doc(window.db, "realisasi_anggaran", docId), dataToSave);
+                    showToast('Data berhasil diperbarui!');
+                } else {
+                    // Jika belum ada, tambah baru
+                    await addDoc(collection(window.db, "realisasi_anggaran"), dataToSave);
+                    showToast('Data berhasil disimpan!');
+                }
+
+                // Set filter ke bulan yang baru diinput
+                document.getElementById('filterTahun').value = tahun;
+                document.getElementById('filterBulan').value = bulan;
+                await renderTabelRekap();
+                
+                document.getElementById('formAnggaran').reset();
+                document.getElementById('detailAnggaran').innerHTML = '<em>Silakan pilih sub kegiatan</em>';
+                switchMenuAnggaran('tabel');
+
+            } catch (error) {
+                console.error("Error saving anggaran:", error);
+                showToast('Gagal menyimpan data.', 'error');
+            } finally {
+                btnSimpan.innerHTML = originalBtnText;
+                btnSimpan.disabled = false;
             }
-
-            saveRealisasi(data);
-            document.getElementById('filterTahun').value = tahun;
-            document.getElementById('filterBulan').value = bulan;
-            renderTabelRekap();
-            
-            document.getElementById('formAnggaran').reset();
-            document.getElementById('detailAnggaran').innerHTML = '<em>Silakan pilih sub kegiatan</em>';
-            showToast('Data berhasil disimpan!');
-            switchMenuAnggaran('tabel');
         }
 
-        function renderTabelRekap() {
-            const master = loadMasterAnggaran();
-            const realisasi = loadRealisasi();
+        async function renderTabelRekap() {
             const tahunAktif = document.getElementById('filterTahun').value;
             const bulanAktif = document.getElementById('filterBulan').value;
             document.getElementById('badgeTahunBulan').textContent = `Tahun ${tahunAktif} - s/d ${bulanAktif}`;
 
             const tbody = document.getElementById('tabelRekap');
-            tbody.innerHTML = ''; 
-            let html = '';
+            tbody.innerHTML = `<tr><td colspan="13" class="text-center">Memuat data dari server...</td></tr>`;
 
-            MASTER_HIERARKI.forEach(p => {
-                let pAnggaran = 0, pRLalu = 0, pRIni = 0, pTUang = 0;
-                let htmlProgram = '', htmlKegiatan = '';
+            try {
+                const { collection, getDocs, query, where } = window.fs;
 
-                p.children.forEach(k => {
-                    let kAnggaran = 0, kRLalu = 0, kRIni = 0, kTUang = 0;
-                    let htmlSub = '';
+                // Pastikan Master Anggaran ter-load
+                if (Object.keys(cachedMasterAnggaran).length === 0) {
+                    const qMaster = await getDocs(collection(window.db, "pengaturan_anggaran"));
+                    qMaster.forEach((doc) => {
+                        const data = doc.data();
+                        cachedMasterAnggaran[data.id_sub] = data;
+                    });
+                }
 
-                    k.children.forEach(s => {
-                        const r = realisasi.find(d => d.tahun === tahunAktif && d.bulan === bulanAktif && d.subId === s.id) || { realisasiLalu: 0, realisasiIni: 0, targetUang: 0, targetFisik: 0, realisasiFisik: 0 };
-                        const sAnggaran = master[s.id] ? (master[s.id][tahunAktif] || 0) : 0;
-                        
-                        const sRLalu = r.realisasiLalu, sRIni = r.realisasiIni, sTUang = r.targetUang, sRsd = sRLalu + sRIni;
-                        const pLalu = sAnggaran > 0 ? (sRLalu / sAnggaran) * 100 : 0;
-                        const pIni = sAnggaran > 0 ? (sRIni / sAnggaran) * 100 : 0;
-                        const pTUang = sAnggaran > 0 ? (sTUang / sAnggaran) * 100 : 0;
-                        const pRsd = sAnggaran > 0 ? (sRsd / sAnggaran) * 100 : 0;
+                // Ambil data realisasi untuk bulan ini
+                const qRealisasi = query(collection(window.db, "realisasi_anggaran"), 
+                    where("tahun", "==", tahunAktif), 
+                    where("bulan", "==", bulanAktif));
+                const snapshotRealisasi = await getDocs(qRealisasi);
+                
+                let realisasiData = [];
+                snapshotRealisasi.forEach((doc) => {
+                    realisasiData.push(doc.data());
+                });
 
-                        kAnggaran += sAnggaran; kRLalu += sRLalu; kRIni += sRIni; kTUang += sTUang;
+                tbody.innerHTML = ''; 
+                let html = '';
 
-                        htmlSub += `
-                            <tr class="row-sub">
-                                <td class="text-center">${s.kode}</td>
-                                <td class="text-left" style="padding-left:20px;">${s.nama}</td>
-                                <td>${formatRupiah(sAnggaran)}</td>
-                                <td>${formatRupiah(sRLalu)}</td><td>${formatPersen(pLalu)}</td>
-                                <td>${formatRupiah(sRIni)}</td><td>${formatPersen(pIni)}</td>
-                                <td>${formatRupiah(sTUang)}</td><td>${formatPersen(pTUang)}</td>
-                                <td>${formatRupiah(sRsd)}</td><td>${formatPersen(pRsd)}</td>
-                                <td class="text-center">${r.targetFisik}%</td><td class="text-center">${r.realisasiFisik}%</td>
+                MASTER_HIERARKI.forEach(p => {
+                    let pAnggaran = 0, pRLalu = 0, pRIni = 0, pTUang = 0;
+                    let htmlProgram = '', htmlKegiatan = '';
+
+                    p.children.forEach(k => {
+                        let kAnggaran = 0, kRLalu = 0, kRIni = 0, kTUang = 0;
+                        let htmlSub = '';
+
+                        k.children.forEach(s => {
+                            const r = realisasiData.find(d => d.subId === s.id) || { realisasiLalu: 0, realisasiIni: 0, targetUang: 0, targetFisik: 0, realisasiFisik: 0 };
+                            const sAnggaran = cachedMasterAnggaran[s.id] && cachedMasterAnggaran[s.id][tahunAktif] ? cachedMasterAnggaran[s.id][tahunAktif] : 0;
+                            
+                            const sRLalu = r.realisasiLalu, sRIni = r.realisasiIni, sTUang = r.targetUang, sRsd = sRLalu + sRIni;
+                            const pLalu = sAnggaran > 0 ? (sRLalu / sAnggaran) * 100 : 0;
+                            const pIni = sAnggaran > 0 ? (sRIni / sAnggaran) * 100 : 0;
+                            const pTUang = sAnggaran > 0 ? (sTUang / sAnggaran) * 100 : 0;
+                            const pRsd = sAnggaran > 0 ? (sRsd / sAnggaran) * 100 : 0;
+
+                            kAnggaran += sAnggaran; kRLalu += sRLalu; kRIni += sRIni; kTUang += sTUang;
+
+                            htmlSub += `
+                                <tr class="row-sub">
+                                    <td class="text-center">${s.kode}</td>
+                                    <td class="text-left" style="padding-left:20px;">${s.nama}</td>
+                                    <td>${formatRupiah(sAnggaran)}</td>
+                                    <td>${formatRupiah(sRLalu)}</td><td>${formatPersen(pLalu)}</td>
+                                    <td>${formatRupiah(sRIni)}</td><td>${formatPersen(pIni)}</td>
+                                    <td>${formatRupiah(sTUang)}</td><td>${formatPersen(pTUang)}</td>
+                                    <td>${formatRupiah(sRsd)}</td><td>${formatPersen(pRsd)}</td>
+                                    <td class="text-center">${r.targetFisik}%</td><td class="text-center">${r.realisasiFisik}%</td>
+                                </tr>
+                            `;
+                        });
+
+                        const kRsd = kRLalu + kRIni;
+                        const kpLalu = kAnggaran > 0 ? (kRLalu / kAnggaran) * 100 : 0;
+                        const kpIni = kAnggaran > 0 ? (kRIni / kAnggaran) * 100 : 0;
+                        const kpTUang = kAnggaran > 0 ? (kTUang / kAnggaran) * 100 : 0;
+                        const kpRsd = kAnggaran > 0 ? (kRsd / kAnggaran) * 100 : 0;
+
+                        pAnggaran += kAnggaran; pRLalu += kRLalu; pRIni += kRIni; pTUang += kTUang;
+
+                        htmlKegiatan += `
+                            <tr class="row-kegiatan">
+                                <td class="text-center">${k.kode}</td>
+                                <td class="text-left" style="padding-left:10px;">${k.nama}</td>
+                                <td>${formatRupiah(kAnggaran)}</td>
+                                <td>${formatRupiah(kRLalu)}</td><td>${formatPersen(kpLalu)}</td>
+                                <td>${formatRupiah(kRIni)}</td><td>${formatPersen(kpIni)}</td>
+                                <td>${formatRupiah(kTUang)}</td><td>${formatPersen(kpTUang)}</td>
+                                <td>${formatRupiah(kRsd)}</td><td>${formatPersen(kpRsd)}</td>
+                                <td class="text-center">-</td><td class="text-center">-</td>
                             </tr>
+                            ${htmlSub}
                         `;
                     });
 
-                    const kRsd = kRLalu + kRIni;
-                    const kpLalu = kAnggaran > 0 ? (kRLalu / kAnggaran) * 100 : 0;
-                    const kpIni = kAnggaran > 0 ? (kRIni / kAnggaran) * 100 : 0;
-                    const kpTUang = kAnggaran > 0 ? (kTUang / kAnggaran) * 100 : 0;
-                    const kpRsd = kAnggaran > 0 ? (kRsd / kAnggaran) * 100 : 0;
+                    const pRsd = pRLalu + pRIni;
+                    const ppLalu = pAnggaran > 0 ? (pRLalu / pAnggaran) * 100 : 0;
+                    const ppIni = pAnggaran > 0 ? (pRIni / pAnggaran) * 100 : 0;
+                    const ppTUang = pAnggaran > 0 ? (pTUang / pAnggaran) * 100 : 0;
+                    const ppRsd = pAnggaran > 0 ? (pRsd / pAnggaran) * 100 : 0;
 
-                    pAnggaran += kAnggaran; pRLalu += kRLalu; pRIni += kRIni; pTUang += kTUang;
-
-                    htmlKegiatan += `
-                        <tr class="row-kegiatan">
-                            <td class="text-center">${k.kode}</td>
-                            <td class="text-left" style="padding-left:10px;">${k.nama}</td>
-                            <td>${formatRupiah(kAnggaran)}</td>
-                            <td>${formatRupiah(kRLalu)}</td><td>${formatPersen(kpLalu)}</td>
-                            <td>${formatRupiah(kRIni)}</td><td>${formatPersen(kpIni)}</td>
-                            <td>${formatRupiah(kTUang)}</td><td>${formatPersen(kpTUang)}</td>
-                            <td>${formatRupiah(kRsd)}</td><td>${formatPersen(kpRsd)}</td>
+                    htmlProgram = `
+                        <tr class="row-program">
+                            <td class="text-center">${p.kode}</td>
+                            <td class="text-left">${p.nama}</td>
+                            <td>${formatRupiah(pAnggaran)}</td>
+                            <td>${formatRupiah(pRLalu)}</td><td>${formatPersen(ppLalu)}</td>
+                            <td>${formatRupiah(pRIni)}</td><td>${formatPersen(ppIni)}</td>
+                            <td>${formatRupiah(pTUang)}</td><td>${formatPersen(ppTUang)}</td>
+                            <td>${formatRupiah(pRsd)}</td><td>${formatPersen(ppRsd)}</td>
                             <td class="text-center">-</td><td class="text-center">-</td>
                         </tr>
-                        ${htmlSub}
                     `;
+                    html += htmlProgram + htmlKegiatan;
                 });
+                tbody.innerHTML = html;
 
-                const pRsd = pRLalu + pRIni;
-                const ppLalu = pAnggaran > 0 ? (pRLalu / pAnggaran) * 100 : 0;
-                const ppIni = pAnggaran > 0 ? (pRIni / pAnggaran) * 100 : 0;
-                const ppTUang = pAnggaran > 0 ? (pTUang / pAnggaran) * 100 : 0;
-                const ppRsd = pAnggaran > 0 ? (pRsd / pAnggaran) * 100 : 0;
-
-                htmlProgram = `
-                    <tr class="row-program">
-                        <td class="text-center">${p.kode}</td>
-                        <td class="text-left">${p.nama}</td>
-                        <td>${formatRupiah(pAnggaran)}</td>
-                        <td>${formatRupiah(pRLalu)}</td><td>${formatPersen(ppLalu)}</td>
-                        <td>${formatRupiah(pRIni)}</td><td>${formatPersen(ppIni)}</td>
-                        <td>${formatRupiah(pTUang)}</td><td>${formatPersen(ppTUang)}</td>
-                        <td>${formatRupiah(pRsd)}</td><td>${formatPersen(ppRsd)}</td>
-                        <td class="text-center">-</td><td class="text-center">-</td>
-                    </tr>
-                `;
-                html += htmlProgram + htmlKegiatan;
-            });
-            tbody.innerHTML = html;
+            } catch (error) {
+                console.error("Error loading rekap:", error);
+                tbody.innerHTML = `<tr><td colspan="13" class="text-center text-danger">Gagal memuat data dari server.</td></tr>`;
+            }
         }
 
-        function exportAnggaran() {
-            const data = loadRealisasi();
+        async function exportAnggaran() {
             const tahunAktif = document.getElementById('filterTahun').value;
             const bulanAktif = document.getElementById('filterBulan').value;
             
-            const filteredData = data.filter(d => d.tahun === tahunAktif && d.bulan === bulanAktif);
-            if (filteredData.length === 0) {
-                showToast('Tidak ada data untuk diexport di bulan ini.', 'error');
-                return;
-            }
+            const btnExport = document.querySelector('button[onclick="exportAnggaran()"]');
+            const originalText = btnExport.innerHTML;
+            btnExport.innerHTML = 'Memproses...';
+            btnExport.disabled = true;
 
-            let csv = 'No,Tanggal Input,Tahun,Bulan,Sub Kegiatan ID,Realisasi Lalu (Rp),Realisasi Ini (Rp),Target Uang (Rp),Target Fisik (%),Realisasi Fisik (%)\n';
-            filteredData.forEach((d, i) => {
-                csv += `${i+1},"${formatTanggal(d.id)}",${d.tahun},${d.bulan},"${d.subId}",${d.realisasiLalu},${d.realisasiIni},${d.targetUang},${d.targetFisik},${d.realisasiFisik}\n`;
-            });
-            downloadFile(csv, `anggaran_${bulanAktif}_${tahunAktif}.csv`, 'text/csv');
-            showToast('Data diexport!');
+            try {
+                const { collection, getDocs, query, where } = window.fs;
+                const q = query(collection(window.db, "realisasi_anggaran"), 
+                    where("tahun", "==", tahunAktif), 
+                    where("bulan", "==", bulanAktif));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    showToast('Tidak ada data untuk diexport di bulan ini.', 'error');
+                    return;
+                }
+
+                let csv = 'No,Tanggal Input,Tahun,Bulan,Sub Kegiatan ID,Realisasi Lalu (Rp),Realisasi Ini (Rp),Target Uang (Rp),Target Fisik (%),Realisasi Fisik (%)\n';
+                let i = 1;
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    csv += `${i},"${formatTanggal(new Date())}",${d.tahun},${d.bulan},"${d.subId}",${d.realisasiLalu},${d.realisasiIni},${d.targetUang},${d.targetFisik},${d.realisasiFisik}\n`;
+                    i++;
+                });
+                
+                downloadFile(csv, `anggaran_${bulanAktif}_${tahunAktif}.csv`, 'text/csv');
+                showToast('Data berhasil diexport!');
+            } catch (error) {
+                console.error("Error exporting anggaran:", error);
+                showToast('Gagal melakukan export data.', 'error');
+            } finally {
+                btnExport.innerHTML = originalText;
+                btnExport.disabled = false;
+            }
         }
 
         // ================================================================
