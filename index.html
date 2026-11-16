@@ -31,7 +31,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // Ekspos fungsi Firebase ke global window agar bisa dipakai di script biasa
         window.db = db;
         window.fs = { collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc, setDoc, getDoc };
     </script>
@@ -847,7 +846,7 @@
         let activePage = 'dashboard';
         let cachedCapaianData = []; 
         let cachedTargetTW = {}; 
-        let cachedMasterAnggaran = {}; // Cache untuk Pagu
+        let cachedMasterAnggaran = {}; 
 
         // ================================================================
         //  DATA MASTER CAPAIAN KINERJA
@@ -969,6 +968,7 @@
             document.getElementById('namaUser').textContent = user.nama;
             
             populateTahunCapaian();
+            populateSubKegiatanDropdown(); // <-- PERBAIKAN: Memanggil fungsi dropdown
             switchLevel('Tujuan'); 
             
             switchPage('dashboard');
@@ -1587,7 +1587,6 @@
             try {
                 const { collection, getDocs, query, where, addDoc, doc, updateDoc } = window.fs;
                 
-                // Cek apakah data untuk sub kegiatan & bulan ini sudah ada
                 const q = query(collection(window.db, "realisasi_anggaran"), 
                     where("tahun", "==", tahun), 
                     where("bulan", "==", bulan), 
@@ -1601,7 +1600,6 @@
                 };
 
                 if (!querySnapshot.empty) {
-                    // Jika sudah ada, timpa (update)
                     if(!confirm('Data sudah ada. Timpa dengan data baru?')) {
                         btnSimpan.innerHTML = originalBtnText;
                         btnSimpan.disabled = false;
@@ -1611,12 +1609,10 @@
                     await updateDoc(doc(window.db, "realisasi_anggaran", docId), dataToSave);
                     showToast('Data berhasil diperbarui!');
                 } else {
-                    // Jika belum ada, tambah baru
                     await addDoc(collection(window.db, "realisasi_anggaran"), dataToSave);
                     showToast('Data berhasil disimpan!');
                 }
 
-                // Set filter ke bulan yang baru diinput
                 document.getElementById('filterTahun').value = tahun;
                 document.getElementById('filterBulan').value = bulan;
                 await renderTabelRekap();
@@ -1645,7 +1641,6 @@
             try {
                 const { collection, getDocs, query, where } = window.fs;
 
-                // Pastikan Master Anggaran ter-load
                 if (Object.keys(cachedMasterAnggaran).length === 0) {
                     const qMaster = await getDocs(collection(window.db, "pengaturan_anggaran"));
                     qMaster.forEach((doc) => {
@@ -1654,7 +1649,6 @@
                     });
                 }
 
-                // Ambil data realisasi untuk bulan ini
                 const qRealisasi = query(collection(window.db, "realisasi_anggaran"), 
                     where("tahun", "==", tahunAktif), 
                     where("bulan", "==", bulanAktif));
