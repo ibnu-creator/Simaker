@@ -1867,6 +1867,30 @@
             }
         }
 
+        function inputFisikRekap(id, field, val) {
+            const v = (val === undefined || val === null) ? '' : val;
+            return `<input type="number" step="any" min="0" id="fisik${field}_${id}" value="${v}" placeholder="0"
+                        style="width:58px;text-align:center;padding:4px 2px;border:1px solid #cbd5e1;border-radius:6px;font-size:12px;"
+                        onchange="simpanFisikRekap('${id}')">%`;
+        }
+
+        async function simpanFisikRekap(id) {
+            const tahun = document.getElementById('filterTahun').value;
+            const bulan = document.getElementById('filterBulan').value;
+            const targetFisik = parseFloat(document.getElementById('fisikT_' + id).value) || 0;
+            const realisasiFisik = parseFloat(document.getElementById('fisikR_' + id).value) || 0;
+            try {
+                const { doc, setDoc } = window.fs;
+                await setDoc(doc(window.db, "fisik_rekap", `${tahun}_${bulan}_${id}`), {
+                    tahun, bulan, refId: id, targetFisik, realisasiFisik
+                });
+                showToast('Fisik tersimpan ke server');
+            } catch (error) {
+                console.error("Error saving fisik:", error);
+                showToast('Gagal menyimpan fisik (' + (error.code || error.message) + ')', 'error');
+            }
+        }
+
         async function renderTabelRekap() {
             const tahunAktif = document.getElementById('filterTahun').value;
             const bulanAktif = document.getElementById('filterBulan').value;
@@ -1889,6 +1913,16 @@
                 snapshotRealisasi.forEach((doc) => {
                     realisasiData.push(doc.data());
                 });
+
+                // Fisik level Program/Kegiatan (diisi manual oleh pengguna)
+                const fisikMap = {};
+                try {
+                    const snapFisik = await getDocs(query(collection(window.db, "fisik_rekap"),
+                        where("tahun", "==", tahunAktif), where("bulan", "==", bulanAktif)));
+                    snapFisik.forEach(d => { const x = d.data(); fisikMap[x.refId] = x; });
+                } catch (e) {
+                    console.error("Error loading fisik_rekap:", e);
+                }
 
                 tbody.innerHTML = ''; 
                 let html = '';
@@ -1945,7 +1979,8 @@
                                 <td>${formatRupiah(kRIni)}</td><td>${formatPersen(kpIni)}</td>
                                 <td>${formatRupiah(kTUang)}</td><td>${formatPersen(kpTUang)}</td>
                                 <td>${formatRupiah(kRsd)}</td><td>${formatPersen(kpRsd)}</td>
-                                <td class="text-center">-</td><td class="text-center">-</td>
+                                <td class="text-center">${inputFisikRekap(k.id, 'T', (fisikMap[k.id] || {}).targetFisik)}</td>
+                                <td class="text-center">${inputFisikRekap(k.id, 'R', (fisikMap[k.id] || {}).realisasiFisik)}</td>
                             </tr>
                             ${htmlSub}
                         `;
@@ -1966,7 +2001,8 @@
                             <td>${formatRupiah(pRIni)}</td><td>${formatPersen(ppIni)}</td>
                             <td>${formatRupiah(pTUang)}</td><td>${formatPersen(ppTUang)}</td>
                             <td>${formatRupiah(pRsd)}</td><td>${formatPersen(ppRsd)}</td>
-                            <td class="text-center">-</td><td class="text-center">-</td>
+                            <td class="text-center">${inputFisikRekap(p.id, 'T', (fisikMap[p.id] || {}).targetFisik)}</td>
+                            <td class="text-center">${inputFisikRekap(p.id, 'R', (fisikMap[p.id] || {}).realisasiFisik)}</td>
                         </tr>
                     `;
                     html += htmlProgram + htmlKegiatan;
